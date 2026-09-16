@@ -50,5 +50,7 @@ done
 
 ```bash
 python3 scripts/html2pptx.py scripts/regress/06_nested_style_and_autofit.html -o /tmp/f06.pptx
-# unzip して ppt/slides/slide1.xml を上の観点で見る
+python3 scripts/probe_pptx.py /tmp/f06.pptx
 ```
+
+**unzip しない。**`probe_pptx.py` が上の観点を1つの表で出す。

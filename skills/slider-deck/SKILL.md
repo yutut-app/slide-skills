@@ -149,6 +149,7 @@ HTML に書けないものなので、pptx 側で作る。
 | `scripts/stage0.py` | **段階0を1コマンドで通す**（HTML絵＋pptx絵＋検査） | **段階0（必ず）** |
 | `scripts/fit_check.py` | **レイアウトの検算**。`budget`＝書く前の予算 / `check`＝作った後の重なり検出 | **手順3で必ず** |
 | `scripts/qa_render.py` | pptx / xlsx を1枚1枚 PNG にする。`--probe` で環境確認 | **手順3（必ず）** |
+| `scripts/probe_pptx.py` | **出てきた pptx の中身を1コマンドで要約する**（書体・文字サイズ・枠の自動拡張・表の余白） | **変換器を直したとき／中身を疑うとき** |
 | `scripts/diff_slides.py` | **変えたスライドを機械的に出す** | 手順4（必ず） |
 | `scripts/pptx_diff_html.py` | **手で直した pptx と HTML の差を出す** | 編集済み pptx を受け取ったとき |
 | `scripts/checked.py` | 検査のサマリ行（対象・件数・前提）。**0件と未実施を区別する** | 直接は使わない |
@@ -323,6 +324,15 @@ python3 scripts/html_png.py <作業>/print.html -o qa_html
 
 **HTML の絵と pptx の絵を並べる。** ずれは片方だけでは出ない。
 実績: リード帯の縦位置が HTML は上寄せ、pptx は中央だった。
+
+**絵で違和感があるのに原因が分からないときは、中身を要約する。**
+
+```bash
+python3 scripts/probe_pptx.py deck/deck_rev<n>.pptx
+```
+
+書体・文字サイズ・枠の自動拡張・表の余白が1つの表で出る。
+**unzip して XML を読まない。**毎回書き方が変わって、前回と比べられない。
 
 **各ツールが出す `検査: ... 対象 n... 指摘 n件 前提: ...` の行を、報告にそのまま貼る。**
 「確認しました」の代わりにならない。
