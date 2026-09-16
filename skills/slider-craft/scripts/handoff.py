@@ -44,12 +44,26 @@ def fingerprint(tpl: Path) -> str:
 
 
 def skill_version() -> str:
+    """スキルの版。
+
+    **git があるとは限らない。** コピーで配ると履歴が付いてこないので、
+    `git log` は空を返す。実際に「取れない」と出て、
+    **引き継ぎメモの版の突き合わせができなかった。**
+
+    そこで**配布物に `VERSION` を入れておき、無ければそれを読む。**
+    """
     try:
         r = subprocess.run(["git", "-C", str(HERE), "log", "-1", "--format=%h"],
                            capture_output=True, text=True, timeout=10)
-        return r.stdout.strip() or "**取れない**"
+        if r.stdout.strip():
+            return r.stdout.strip()
     except (OSError, subprocess.SubprocessError):
-        return "**取れない**"
+        pass
+    for base in (HERE.parent, HERE.parent.parent, HERE.parent.parent.parent):
+        f = base / "VERSION"
+        if f.exists():
+            return f.read_text(encoding="utf-8").strip().splitlines()[0]
+    return "**取れない**"
 
 
 TEMPLATE = """# 引き継ぎ
@@ -77,8 +91,18 @@ TEMPLATE = """# 引き継ぎ
 <まだ入れていない / rev<n> の pptx に入れた>
 **図を入れた pptx は再変換すると消える。**入れた版を必ず書く。
 
+## スキルに当てた直し
+**このスキル自身の不具合を直したなら、ここに書いて配布元へ報告する。**
+書かないと、**次の配布で黙って消える**（実際に2回消えた）。
+- <直した場所と、何が起きていたか>
+
 ## 未決
 - <残っている判断・待っているデータ>
+
+## 積み残し
+**「直さない」と書くときは、根拠を添える。**
+「仕様なので直さない」のか「**まだ原因を調べていない**」のかを区別する。
+調べていないなら、そう書く。**仕様と誤認して固定された例がある。**
 
 ## 触っていないもの
 スライド <番号を列挙>

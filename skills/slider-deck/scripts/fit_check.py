@@ -63,7 +63,10 @@ def needed_lines(text: str, box_w_inch: float, pt: float) -> int:
     """その文言が何行になるか。改行も数える。"""
     cols = max_chars_per_line(box_w_inch, pt)
     if cols <= 0:
-        return 999
+        # **数えられないものを「溢れ」と言わない。**
+        # 枠が文字1つぶんより狭いと 999 行必要と出し、
+        # 1桁の数字（手順番号など）を溢れと誤検出していた
+        return 0
     lines = 0
     for para in text.split("\n"):
         w = char_width_units(para)
@@ -316,6 +319,9 @@ def cmd_check(args):
                 need = needed_lines(text, r[2], pt)
             sp = line_spacing_of(shp, pt)
             cap = max_lines(r[3], pt, sp)
+            if need == 0:
+                # 幅から行数を数えられなかった。**溢れとも合格とも言わない**
+                continue
             if cap and need > cap:
                 findings.append((i, "溢れ",
                                  f"「{text[:14]}」が {need} 行必要だが枠は {cap} 行分"

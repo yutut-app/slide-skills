@@ -29,6 +29,7 @@ from lxml import html as LH
 from pptx import Presentation
 from pptx.util import Emu
 
+import checked
 import html_abs as HA
 
 # **定数を import 時に控えない。** 換算係数はテンプレートごとに違い、
@@ -124,20 +125,32 @@ def shapes_of(slide, dflt=None):
     return out
 
 
-def html_boxes(path: Path):
-    """HTML 1枚から、pptx に出るはずの図形を同じ形で取り出す。"""
+def html_slide_count(path: Path) -> int:
+    """その HTML に `.slide` がいくつあるか。**1ファイル＝1枚とは限らない。**"""
+    doc = LH.parse(str(path)).getroot()
+    return len(doc.xpath(
+        "//*[contains(concat(' ', normalize-space(@class), ' '), ' slide ')]"))
+
+
+def html_boxes(path: Path, index: int = 0):
+    """HTML の `index` 枚目から、pptx に出るはずの図形を同じ形で取り出す。
+
+    **`.slide` が複数あれば、その何枚目かを指定して読む。**
+    先頭だけを見ていたため、18枚を1ファイルにした資料を「1枚」と数え、
+    **残り17枚を見ないまま「差は無い」と報告した。**
+    """
     doc = LH.parse(str(path)).getroot()
     rules = []
     for s in doc.xpath("//style"):
         rules += HA.parse_css(s.text or "")
     slides = doc.xpath(
         "//*[contains(concat(' ', normalize-space(@class), ' '), ' slide ')]")
-    if not slides:
+    if not slides or index >= len(slides):
         return []
     body = doc.find(".//body")
     inherit = HA.inheritable(HA.computed(body, rules) if body is not None else {})
     out = []
-    for el in slides[0].iterchildren():
+    for el in slides[index].iterchildren():
         if not isinstance(el.tag, str):
             continue
         st = HA.computed(el, rules, inherit)
@@ -184,9 +197,9 @@ def pair(html_items, pptx_items):
     return pairs, extra
 
 
-def compare(html_file: Path, pptx_slide, no, dflt=None):
+def compare(html_file: Path, pptx_slide, no, dflt=None, index: int = 0):
     rows = []
-    h_items = html_boxes(html_file)
+    h_items = html_boxes(html_file, index)
     p_items = shapes_of(pptx_slide, dflt)
     pairs, extra = pair(h_items, p_items)
 
@@ -231,6 +244,7 @@ def main():
     if not pptx_path.exists():
         sys.exit(f"見つからない: {pptx_path}")
 
+    # **単位はファイルではなく「枚」。**(ファイル, その中の何枚目) で持つ
     files = []
     for h in args.html:
         p = Path(h)
@@ -238,23 +252,35 @@ def main():
             sys.exit(f"見つからない: {p}")
         doc = LH.parse(str(p)).getroot()
         frames = doc.xpath("//iframe/@src")
-        files += [p.parent / f for f in frames] if frames else [p]
+        for f in ([p.parent / x for x in frames] if frames else [p]):
+            n = html_slide_count(f)
+            files += [(f, i) for i in range(max(1, n))]
 
-    scale, src = HA.apply_scale_from(files)
+    scale, src = HA.apply_scale_from([f for f, _ in files])
     print(f"px→pt 換算: 1pt = {scale}px（出どころ: {src}）")
 
     prs = Presentation(str(pptx_path))
     slides = list(prs.slides)
     print(f"pptx: {pptx_path.name}  {len(slides)} 枚")
-    print(f"HTML: {len(files)} 枚  "
-          f"（{', '.join(f.name for f in files)}）")
+    names = []
+    for f, idx in files:
+        names.append(f.name if idx == 0 and
+                     sum(1 for g, _ in files if g == f) == 1
+                     else f"{f.name}#{idx + 1}")
+    print(f"HTML: {len(files)} 枚  （{', '.join(names)}）")
     if len(slides) != len(files):
-        print(f"\n**枚数が違う**（pptx {len(slides)} / HTML {len(files)}）。"
-              "スライドの追加・削除があった可能性がある")
+        # **数が合わないまま比べない。**足りない方に合わせて黙って打ち切ると、
+        # 見ていない枚があるのに「差は無い」と報告することになる
+        print(f"\n**枚数が違う（pptx {len(slides)} / HTML {len(files)}）。**")
+        print("  スライドの追加・削除があったか、**渡す HTML が足りない。**")
+        print("  **このまま比べない。**少ない方に合わせると、"
+              "見ていない枚を「差は無い」と報告することになる。")
+        return checked.summary("pptx_diff_html", 0, "枚", 1,
+                               {"pptx": len(slides), "HTML": len(files)})
 
     rows = []
-    for i, (f, s) in enumerate(zip(files, slides), 1):
-        rows += compare(f, s, i, default_pt(prs))
+    for i, ((f, idx), s) in enumerate(zip(files, slides), 1):
+        rows += compare(f, s, i, default_pt(prs), idx)
 
     if not rows:
         print("\n差は無い。HTML テンプレートは pptx と一致している。")
