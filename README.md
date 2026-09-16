@@ -203,6 +203,7 @@ skills/slider-deck/assets/templates/
 | `qa_render.py` | pptx / xlsx を1枚1枚 PNG に | deck |
 | `diff_slides.py` | 手直しの後。変えたスライドを機械的に出す | deck |
 | `pptx_diff_html.py` | 手で直した pptx と HTML の差 | deck |
+| `chart_xlsx.py` | **HTML の図から Excel を作り、pptx に貼る** | deck |
 | `reskin_html.py` | 別テンプレートへの載せ替え | reskin |
 
 **検査の道具は必ず1行を出す。**

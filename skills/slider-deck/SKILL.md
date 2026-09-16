@@ -303,6 +303,25 @@ EOF
 
 ### 図・表は、種類で扱いが分かれる ★
 
+#### グラフは Excel で作って貼る ★
+
+**提出先で数字を Excel で直せるようにする。**
+
+```bash
+# 1. HTML の図から .xlsx を起こす（どの環境でも動く）
+python3 scripts/chart_xlsx.py deck/deck.html -o deck/charts
+
+# 2. Excel のグラフを pptx に貼る（**Windows + Excel + PowerPoint**）
+python3 scripts/chart_xlsx.py --paste deck/charts deck/deck_rev1.pptx
+```
+
+**数は推測しない。**出どころは `data-values` → 図の中の「ラベル 数値」の順で、
+**どちらも読めなければ作らず、読めなかった図として報告する。**
+絵から元の数字は戻せない。**目分量で入れると、間違いが資料に残る。**
+
+貼り付けは**図形として貼る**（リンクにしない）。リンクにすると、
+受け取った側で .xlsx の場所が変わったときに開けなくなる。
+
 **グラフは、HTML の書き方で結果が変わる。** ★
 
 | HTML の書き方 | pptx で何になるか |
