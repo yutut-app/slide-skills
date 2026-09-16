@@ -29,6 +29,7 @@
 """
 
 import re
+import sys
 from pathlib import Path
 
 from pptx.dml.color import RGBColor

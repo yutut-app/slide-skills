@@ -265,6 +265,7 @@ def cmd_check(args):
     sw = prs.slide_width / EMU_PER_INCH
     sh_ = prs.slide_height / EMU_PER_INCH
     findings = []
+    gaps = {}   # 同じ位置の隙間をまとめる（枠の位置と大きさで引く）
     n_slides, n_shapes = len(prs.slides._sldIdLst), 0
 
     for i, slide in enumerate(prs.slides, 1):
@@ -327,7 +328,7 @@ def cmd_check(args):
                                  f"「{text[:14]}」が {need} 行必要だが枠は {cap} 行分"
                                  f"（{pt:.0f}pt・行間 {sp:.2f}・幅 {r[2]:.2f}in）"))
 
-        # 隙間が足りない（縦に並ぶ要素）
+        # 隙間が足りない（縦に並ぶ要素）。**まとめてから足す**（下の gaps）
         text_items = sorted([(r, t, body_pt(s)) for s, r, t in items if t],
                             key=lambda x: x[0][1])
         for a in range(len(text_items) - 1):
@@ -348,9 +349,31 @@ def cmd_check(args):
             # 上が明らかに大きい字で、左端がそろっているなら同じブロックとみなす
             if pt1 >= pt2 * 1.3 and abs(x1 - x2) < 0.06:
                 continue
-            findings.append((i, "隙間不足",
-                             f"「{t1[:10]}」と「{t2[:10]}」の間が {gap:.2f}in"
+            # **同じ場所の隙間は、枚ごとに数えない。**
+            # テンプレートが決めている間隔は全枚で同じなので、
+            # 1枚ずつ出すと本物の指摘が埋もれる（18枚で27件出た）。
+            # 文字は枚ごとに違うので、**枠の位置と大きさでまとめる**
+            sig = (round(x1, 2), round(w1, 2), round(h1, 2),
+                   round(x2, 2), round(w2, 2), round(gap, 2))
+            gaps.setdefault(sig, []).append(
+                (i, f"「{t1[:10]}」と「{t2[:10]}」", gap))
+
+    # **同じ場所のものは1件にまとめる。**枚数を添えて、どこの話か分かるようにする
+    for sig, hits in sorted(gaps.items(), key=lambda kv: -len(kv[1])):
+        gap = sig[5]
+        slides_ = sorted({h[0] for h in hits})
+        if len(slides_) >= 3:
+            findings.append((slides_[0], "隙間不足",
+                             f"左 {sig[0]:.1f}in・上下の幅 {sig[1]:.1f}/{sig[4]:.1f}in "
+                             f"の隙間が {gap:.2f}in "
+                             f"（**{len(slides_)}枚で同じ**: {slides_[0]}〜{slides_[-1]}枚目）。"
+                             f"**テンプレートが決めている間隔。配布元の担当**"
                              f"（{SAFE_GAP_INCH}in 以上あける）"))
+        else:
+            for i_, pair, g in hits:
+                findings.append((i_, "隙間不足",
+                                 f"{pair}の間が {g:.2f}in"
+                                 f"（{SAFE_GAP_INCH}in 以上あける）"))
 
     print(f"検査: {Path(args.deck).name}  {len(prs.slides)} 枚  "
           f"{sw:.2f}×{sh_:.2f}in")
