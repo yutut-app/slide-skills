@@ -1,0 +1,79 @@
+# deck.yaml — スライドの中間成果物
+#
+# これが唯一の正。プレビューも pptx もここから作る。
+# 出力された pptx を手で直さない。直すのはこのファイル。
+#
+# 書式の規則は references/50_build.md、文体は references/40_japanese.md を見る。
+
+meta:
+  title: <資料の件名>
+  audience: <誰に見せるか>
+  action: <相手に取ってほしい行動を1文で。「理解してもらう」は不可>
+  phase: <提案 / 中間報告 / 最終報告 / 意思決定依頼>
+  template: null            # assets/templates/deck/ 配下のパス。無ければ null
+  output: deck/<YYYY-MM-DD>_<件名>.pptx
+  # 扱わない範囲。決めておかないと枚数が膨らむ
+  out_of_scope:
+    - <この資料で扱わないこと>
+  # 未取得のデータ。推測値で図を作らないための覚え書き
+  missing_data:
+    - <未取得のデータと、それが要るスライド番号>
+
+slides:
+  # ------------------------------------------------------------------
+  # layout の種類
+  #   title          表紙
+  #   section        章の扉
+  #   message-body   メッセージ＋文字（結論・リスクの列挙など）
+  #   message-visual メッセージ＋図（既定。図解の型は 30_visual.md で決める）
+  #   table          メッセージ＋表（誰が・いつ・何を、比較表）
+  #   appendix       付録
+  # ------------------------------------------------------------------
+
+  - no: 1
+    layout: message-body
+    heading: <体言止め・全角20字以内>
+    message: <言い切り・全角40字以内・句点なし・数値を入れる>
+    body:
+      type: text            # text / bullets / table / image / chart
+      items:
+        - <全角30字以内。6行まで。体言止めで統一>
+    notes: |
+      話す内容。敬体でよい。スライドには載せない。
+      埋め終わったらテンプレート由来の記入例は消す。
+
+  - no: 2
+    layout: message-visual
+    heading: <体言止め>
+    message: <言い切り>
+    body:
+      type: image
+      # 図を作ったテンプレート。出所を追えるよう必ず残す
+      source: <slider-deck>/assets/templates/qc7/01_パレート図.xlsx
+      note: <期間・件数・出所。例「2026年1月〜6月、n=600」>
+    notes: |
+      <補足>
+
+  - no: 3
+    layout: table
+    heading: <体言止め>
+    message: <言い切り>
+    body:
+      type: table
+      header: [項目, 担当, 期限]
+      rows:
+        - [<全角15字以内>, <担当>, <YYYY-MM-DD>]
+    notes: |
+      <補足>
+
+  # 付録は本編の後ろにまとめる。本編に入れない
+  - no: A1
+    layout: appendix
+    heading: 付録：<体言止め>
+    message: null           # 付録は message を省略してよい
+    body:
+      type: table
+      header: []
+      rows: []
+    notes: |
+      <補足>

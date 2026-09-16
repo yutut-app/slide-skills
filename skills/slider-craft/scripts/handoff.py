@@ -1,0 +1,132 @@
+#!/usr/bin/env python3
+"""引き継ぎメモの雛形を作る。版と指紋を機械で埋める。
+
+    python3 scripts/handoff.py <テンプレ>ディレクトリ -o work/HANDOFF.md
+
+**「同じものを用意した」だけでは足りない。** 名前が同じでも中身が違うことがある。
+テンプレートの指紋とスキルの版を入れて、受け取った側が突き合わせられるようにする
+（`references/49_handoff.md`）。
+
+**中身は人が書く。** ここで埋まるのは機械で決まる欄だけ。
+「今どこ」「直したこと」「未決」「触っていないもの」は会話にしか無い。
+"""
+
+import argparse
+import hashlib
+import subprocess
+import sys
+from datetime import date
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+
+
+def fingerprint(tpl: Path) -> str:
+    """テンプレートの中身の指紋。html・manifest・images を名前順に連結して取る。
+
+    **画像も見る。** 見た目はロゴなどの画像でも決まるので、
+    html だけを見ていると**ロゴが違うのに指紋は一致する。**
+    実際に、片方が仮のロゴのままでも気づけない状態だった。
+
+    **名前も混ぜる。** 中身だけだと、名前を変えただけの入れ替えを拾えない。
+    """
+    files = (sorted(tpl.glob("*.html"))
+             + sorted(tpl.glob("template-manifest.md"))
+             + sorted(p for p in tpl.glob("images/*") if p.is_file()))
+    if not files:
+        return "**取れない（html が無い）**"
+    h = hashlib.sha256()
+    for f in files:
+        h.update(f.relative_to(tpl).as_posix().encode("utf-8"))
+        h.update(b"\0")
+        h.update(f.read_bytes())
+    return h.hexdigest()[:12]
+
+
+def skill_version() -> str:
+    try:
+        r = subprocess.run(["git", "-C", str(HERE), "log", "-1", "--format=%h"],
+                           capture_output=True, text=True, timeout=10)
+        return r.stdout.strip() or "**取れない**"
+    except (OSError, subprocess.SubprocessError):
+        return "**取れない**"
+
+
+TEMPLATE = """# 引き継ぎ
+
+版: rev<n>（{today}）
+渡す人 → 受け取る人: <誰> → <誰>
+**スキルの版: {version}**  ← 違えば挙動が違う。指摘が再現しないときはここを疑う
+
+## 今どこ
+段階: <0 / 1 / 2>
+<段階1の終了宣言が済んでいるかを書く>
+
+## テンプレート
+名前: {name}
+スライドサイズ: {size}
+**指紋: {fp}**  ← 受け取った側は自分で計算して突き合わせる
+同梱した / 相手が持っている（どちらかを書く）
+
+## 直近で直したこと
+| スライド | 直したこと |
+|---|---|
+| <n> | <内容> |
+
+## 図
+<まだ入れていない / rev<n> の pptx に入れた>
+**図を入れた pptx は再変換すると消える。**入れた版を必ず書く。
+
+## 未決
+- <残っている判断・待っているデータ>
+
+## 触っていないもの
+スライド <番号を列挙>
+"""
+
+
+def main():
+    ap = argparse.ArgumentParser(description="引き継ぎメモの雛形を作る")
+    ap.add_argument("template", help="テンプレートのディレクトリ")
+    ap.add_argument("-o", "--out", help="書き出し先。省くと標準出力")
+    ap.add_argument("--fingerprint", action="store_true",
+                    help="指紋と版だけ出す。相手と突き合わせるときに使う")
+    args = ap.parse_args()
+
+    tpl = Path(args.template)
+    if not tpl.is_dir():
+        sys.exit(f"ディレクトリではない: {tpl}")
+
+    if args.fingerprint:
+        print(f"{tpl.name}  指紋 {fingerprint(tpl)}  スキルの版 {skill_version()}")
+        print("**両方が一致して初めて「同じ」。** 違えば新しい方に揃える")
+        return 0
+
+    size = "<manifest に無い>"
+    man = tpl / "template-manifest.md"
+    if man.exists():
+        for line in man.read_text().splitlines():
+            if line.startswith("slide_size:"):
+                size = line.split(":", 1)[1].strip()
+                break
+
+    text = TEMPLATE.format(today=date.today().isoformat(), version=skill_version(),
+                           name=tpl.name, size=size, fp=fingerprint(tpl))
+    if args.out:
+        p = Path(args.out)
+        if p.exists():
+            sys.exit(f"既にある: {p}\n**上書きしない。** 別名にするか、手で追記する")
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text(text)
+        print(f"書き出した: {p}")
+    else:
+        print(text)
+
+    print("\n**<> の欄は人が書く。** 機械で決まるのは版・指紋・サイズだけ。")
+    print("**「未決」と「触っていないもの」を空にしない。**"
+          "無いと、受け取った側は全部を疑って読み直すことになる。")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
