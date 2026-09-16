@@ -141,6 +141,22 @@ python3 skills/slider-craft/scripts/handoff.py <テンプレ> --fingerprint
 python3 skills/slider-craft/scripts/gen_deck_templates.py
 ```
 
+## 更新のしかた
+
+**このリポジトリは配布物。** 更新するたびにコミットが積まれるので、
+**どのファイルが変わったかは履歴で追える。**
+
+```bash
+git log --oneline          # 何を変えたか
+git log --stat -1          # 直近でどのファイルが変わったか
+git pull                   # 受け取った側の更新
+```
+
+**出してはいけないものが混ざっていないかは、公開の前に機械で見ている。**
+ファイルの中身と**コミット文の両方**を検査し、1件でも当たれば push しない。
+
+---
+
 ## 置き場所の決まり ★
 
 **スキルの資産はスキルの中。利用者のデータはスキルの外。**
