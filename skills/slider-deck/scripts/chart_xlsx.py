@@ -141,6 +141,16 @@ def write_xlsx(path: Path, title, kind, labels, series):
     wb.save(path)
 
 
+def box_px(el, rules, inherit):
+    """図の枠を px で返す。**取れないものは None。**推測で埋めない。"""
+    import html_abs as HA
+    st = HA.computed(el, rules, inherit)
+    while st.get("left") is None and el.getparent() is not None:
+        el = el.getparent()
+        st = HA.computed(el, rules, inherit)
+    return {k: HA.px(st.get(k)) for k in ("left", "top", "width", "height")}
+
+
 def extract(html: Path, outdir: Path, warn):
     """HTML の中の図を1つずつ .xlsx にする。作れた数を返す。"""
     import html_abs as HA
@@ -154,8 +164,10 @@ def extract(html: Path, outdir: Path, warn):
 
     slides = doc.xpath(
         "//*[contains(concat(' ', normalize-space(@class), ' '), ' slide ')]") or [doc]
-    made, skipped = 0, 0
+    made, skipped, geom = 0, 0, {}
     outdir.mkdir(parents=True, exist_ok=True)
+    # **(係数, 出どころ) で返る。**係数だけを控える
+    px_per_pt, px_src = HA.px_per_pt_of([html])
     for sno, slide in enumerate(slides, 1):
         cands = slide.xpath(".//*[@data-chart]") + slide.xpath(".//svg") + \
             slide.xpath(".//*[@data-figure]")
@@ -181,19 +193,39 @@ def extract(html: Path, outdir: Path, warn):
             kind, labels, series = got
             out = outdir / f"s{sno:02d}_{re.sub(r'[^0-9A-Za-zぁ-んァ-ヶ一-龠]', '_', name)[:20]}.xlsx"
             write_xlsx(out, name, kind, labels, series)
+            # **貼る位置を控えておく。**貼り付けは中央に入るので、
+            # 元の図の場所が分からないと、人が毎回動かすことになる
+            geom[out.name] = {"slide": sno, "name": name,
+                              **box_px(el, rules, inherit)}
             print(f"  {out.name}  {kind} / 分類{len(labels)} / 系列{len(series)}")
             made += 1
+    if geom:
+        import json
+        (outdir / "geometry.json").write_text(
+            json.dumps({"px_per_pt": px_per_pt, "係数の出どころ": px_src,
+                        "図": geom},
+                       ensure_ascii=False, indent=2), encoding="utf-8")
     return made, skipped
 
 
-def paste(xdir: Path, pptx: Path, warn):
+def paste(xdir: Path, pptx: Path, warn, dry=False):
     """Excel のグラフを PowerPoint に貼る。**Windows の本体が要る。**
 
     貼り先のスライドは、ファイル名の先頭 `sNN_` で決める。
     **貼るのは図形としてのグラフ**（リンクではない）。リンクにすると、
     受け取った側で .xlsx の場所が変わったときに開けなくなる。
     """
+    import json
     import platform
+
+    g = {}
+    gf = xdir / "geometry.json"
+    if gf.exists():
+        g = json.loads(gf.read_text(encoding="utf-8"))
+
+    if dry:
+        return dry_run(xdir, pptx, g, warn)
+
     if platform.system() != "Windows":
         warn.append("**貼り付けは Windows でしか行えない**"
                     "（Excel と PowerPoint の本体を使う）。"
@@ -217,9 +249,14 @@ def paste(xdir: Path, pptx: Path, warn):
                 continue
             wb = xl.Workbooks.Open(str(f.resolve()))
             try:
-                wb.Sheets(1).ChartObjects(1).Chart.ChartArea.Copy()
+                ch = find_chart(wb)
+                if ch is None:
+                    warn.append(f"{f.name}: **グラフが見つからない**")
+                    continue
+                ch.ChartArea.Copy()
                 # 2 = ppPasteShape。**貼り付け先の体裁に合わせない**
-                pres.Slides(sno).Shapes.PasteSpecial(2)
+                shp = pres.Slides(sno).Shapes.PasteSpecial(2)(1)
+                place(shp, g, f.name, warn)
                 n += 1
             finally:
                 wb.Close(False)
@@ -231,6 +268,66 @@ def paste(xdir: Path, pptx: Path, warn):
     return n
 
 
+def find_chart(wb):
+    """ブックの中の最初のグラフ。**1枚目に無いことがある。**全シート見る。"""
+    for i in range(1, wb.Sheets.Count + 1):
+        sh = wb.Sheets(i)
+        if sh.ChartObjects().Count:
+            return sh.ChartObjects(1).Chart
+    return None
+
+
+def place(shp, g, name, warn):
+    """控えた px の位置に置く。**控えが無ければ動かさない。**
+
+    勝手に中央から動かすより、**動かしていないと分かるほうがよい。**
+    """
+    info = (g.get("図") or {}).get(name)
+    ppp = g.get("px_per_pt")
+    if not info or not ppp or info.get("left") is None:
+        warn.append(f"{name}: 位置の控えが無い。**中央に入ったまま。**手で置く")
+        return
+    shp.Left = info["left"] / ppp
+    shp.Top = info["top"] / ppp
+    if info.get("width"):
+        shp.Width = info["width"] / ppp
+    if info.get("height"):
+        shp.Height = info["height"] / ppp
+
+
+def dry_run(xdir: Path, pptx: Path, g, warn):
+    """**Windows へ持ち込む前に、通らない条件をここで出す。**
+
+    COM が無い環境でも、貼り先の枚数・位置の控え・対応づけは確かめられる。
+    """
+    from pptx import Presentation
+
+    files = sorted(xdir.glob("*.xlsx"))
+    n_slides = len(Presentation(str(pptx)).slides)
+    print(f"貼り先: {pptx.name}（{n_slides}枚）  ブック {len(files)} 件\n")
+    print("| ブック | スライド | 位置(pt) |")
+    print("|---|---|---|")
+    ok = 0
+    for f in files:
+        m = re.match(r"s(\d+)_", f.name)
+        sno = int(m.group(1)) if m else 1
+        info = (g.get("図") or {}).get(f.name)
+        ppp = g.get("px_per_pt")
+        if sno > n_slides:
+            pos = "**貼り先のスライドが無い**"
+            warn.append(f"{f.name}: スライド{sno}が無い（全{n_slides}枚）")
+        elif not info or info.get("left") is None or not ppp:
+            pos = "**控えが無い → 中央**"
+            warn.append(f"{f.name}: 位置の控えが無い")
+        else:
+            pos = (f"{info['left'] / ppp:.0f},{info['top'] / ppp:.0f} "
+                   f"{(info.get('width') or 0) / ppp:.0f}×"
+                   f"{(info.get('height') or 0) / ppp:.0f}")
+            ok += 1
+        print(f"| {f.name} | {sno} | {pos} |")
+    return ok
+
+
 def main():
     ap = argparse.ArgumentParser(description="HTML の図から Excel を作り、pptx に貼る")
     ap.add_argument("src", help="HTML（既定）／--paste のときは .xlsx のあるフォルダ")
@@ -238,17 +335,21 @@ def main():
     ap.add_argument("-o", "--outdir", default="charts", help="xlsx の出力先")
     ap.add_argument("--paste", action="store_true",
                     help="作った Excel のグラフを pptx に貼る（**Windows のみ**）")
+    ap.add_argument("--dry-run", action="store_true",
+                    help="**貼らずに対応づけだけ確かめる。**どの環境でも動く。"
+                         "Windows へ持ち込む前にこれを通す")
     args = ap.parse_args()
 
     warn = []
     if args.paste:
         if not args.pptx:
             sys.exit("貼り先の pptx を渡す: --paste <xlsxのフォルダ> <pptx>")
-        n = paste(Path(args.src), Path(args.pptx), warn)
+        n = paste(Path(args.src), Path(args.pptx), warn, dry=args.dry_run)
         for w_ in warn:
             print("- " + w_)
-        return checked.summary("chart_xlsx --paste", n, "図", len(warn),
-                               {"貼り先": args.pptx})
+        return checked.summary(
+            "chart_xlsx --paste" + (" --dry-run" if args.dry_run else ""),
+            n, "図", len(warn), {"貼り先": args.pptx})
 
     made, skipped = extract(Path(args.src), Path(args.outdir), warn)
     for w_ in warn:

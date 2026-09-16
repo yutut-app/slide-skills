@@ -6,7 +6,7 @@
     python3 scripts/reskin_html.py work/ --to <テンプレ名> -o work_<テンプレ名>
 
 **載せ替えるのは HTML。pptx ではない。**
-pptx は派生物であり、手で直しても次の変換で消える（slider-craft `48_html.md`）。
+pptx は派生物であり、手で直しても次の変換で消える（slider-craft `<slider-craft>/references/48_html.md`）。
 **正本である HTML を載せ替え、pptx は変換し直す。**
 
 ## 何を入れ替えているか

@@ -18,6 +18,10 @@ import sys
 from datetime import date
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+import checked
+
 HERE = Path(__file__).resolve().parent
 
 
@@ -115,14 +119,42 @@ def main():
     ap.add_argument("-o", "--out", help="書き出し先。省くと標準出力")
     ap.add_argument("--fingerprint", action="store_true",
                     help="指紋と版だけ出す。相手と突き合わせるときに使う")
+    ap.add_argument("--expect",
+                    help="**引き継ぎメモに書かれた指紋。**"
+                         "手元のテンプレートと違えば異常終了する（終了コード 1）")
     args = ap.parse_args()
 
     tpl = Path(args.template)
     if not tpl.is_dir():
         sys.exit(f"ディレクトリではない: {tpl}")
 
+    got = fingerprint(tpl)
+
+    if args.expect:
+        # **規約に「突き合わせる」と書くだけでは守られない。**機械で止める。
+        # 違う版で出しても、変換も検査も最後まで走りきってしまう
+        want = args.expect.strip()
+        ok = got == want
+        print(f"{tpl.name}  指紋 {got}  引き継ぎメモ {want}")
+        if ok:
+            print("**一致した。**そのまま進めてよい")
+        else:
+            print("\n**指紋が違う。このまま変換しない。**")
+            print("| | |")
+            print("|---|---|")
+            print(f"| 手元のテンプレート | {got} |")
+            print(f"| 受け取った資料が前提にしている版 | {want} |")
+            print("\n**名前が同じでも中身が違う。**どちらが新しいかを確かめる。")
+            print("受け取った HTML のほうが新しいなら、"
+                  "`gen_template.py` で作り直してから変換する。")
+        code = checked.summary("handoff --expect", 1, "件", 0 if ok else 1,
+                               {"手元": got, "メモ": want})
+        # **不一致は異常終了させる。**サマリ行は「見た」ことしか示さない。
+        # 終了コードで落とさないと、後続の変換がそのまま走る
+        return code or (0 if ok else 1)
+
     if args.fingerprint:
-        print(f"{tpl.name}  指紋 {fingerprint(tpl)}  スキルの版 {skill_version()}")
+        print(f"{tpl.name}  指紋 {got}  スキルの版 {skill_version()}")
         print("**両方が一致して初めて「同じ」。** 違えば新しい方に揃える")
         return 0
 

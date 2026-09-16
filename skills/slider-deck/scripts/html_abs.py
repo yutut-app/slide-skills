@@ -920,7 +920,7 @@ def add_table(slide, tbl, style, rules, inherit, x, y, cx, h, warn):
     **全部が白や薄いグレーに落ちて、意図が消える。**
 
     **罫線だけは PowerPoint の既定に任せる。**
-    CSS で作った罫線の色や太さは写さない（**配布元の規約**（48_html.md）「効かないこと」）。
+    CSS で作った罫線の色や太さは写さない（**配布元の規約**（<slider-craft>/references/48_html.md）「効かないこと」）。
     """
     rows = tbl.xpath(".//tr")
     if not rows:

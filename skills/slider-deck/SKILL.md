@@ -211,9 +211,15 @@ assets/templates/deck/<名前>/
 python3 scripts/handoff.py <テンプレ> --fingerprint
 ```
 
-**引き継ぎメモの指紋と違ったら、そのまま進めない。**
+**突き合わせは、機械にやらせる。**目で見比べると飛ばす。
+
+```bash
+python3 scripts/handoff.py <テンプレ> --expect <メモに書かれた指紋>
+```
+
+**違えば異常終了する**（終了コード 1）。そのまま変換しない。
 名前が同じでも中身が違うことがある。どちらが新しいかを確かめる。
-**違う版で出しても、最後まで走りきってしまう。**機械は気づけない。
+**違う版で出しても、変換も検査も最後まで走りきる。**止めるのはここだけ。
 
 #### 無いとき・食い違うときだけ、作り直す
 
@@ -311,9 +317,15 @@ EOF
 # 1. HTML の図から .xlsx を起こす（どの環境でも動く）
 python3 scripts/chart_xlsx.py deck/deck.html -o deck/charts
 
-# 2. Excel のグラフを pptx に貼る（**Windows + Excel + PowerPoint**）
+# 2. 貼る前に、対応づけを確かめる（**どの環境でも動く**）
+python3 scripts/chart_xlsx.py --paste --dry-run deck/charts deck/deck_rev1.pptx
+
+# 3. Excel のグラフを pptx に貼る（**Windows + Excel + PowerPoint**）
 python3 scripts/chart_xlsx.py --paste deck/charts deck/deck_rev1.pptx
 ```
+
+貼る位置は `geometry.json` に控えてある（元の図の座標）。
+**控えが無い図は中央に入ったままになり、その旨を出す。**黙って置かない。
 
 **数は推測しない。**出どころは `data-values` → 図の中の「ラベル 数値」の順で、
 **どちらも読めなければ作らず、読めなかった図として報告する。**
@@ -409,13 +421,13 @@ HTML の絵・pptx の絵・検査が一度に出る。**両方の絵を並べ�
 **位置は、写すか・任せるかを選べる。** ★
 
 ```bash
-python3 scripts/html2pptx.py deck/deck.html -o deck/deck_rev1.pptx --relayout
+python3 scripts/html2pptx.py deck/deck.html -o deck/deck_rev1.pptx
 ```
 
 | | いつ使うか | 何が起きるか |
 |---|---|---|
-| 既定（写す） | HTML と1枚ずつ見比べたいとき | HTML の座標をそのまま置く。**PowerPoint が枠を縦に伸ばすと重なる** |
-| **`--relayout`（任せる）** | **器に厳密に合わせる必要がないとき。ふだんはこちら** | 枠を行に束ね、余白をそろえて敷き直す。**重なりが起きない** |
+| **既定（任せる）** | **ふだんはこちら。何も付けない** | 枠を行に束ね、余白をそろえて敷き直す。**重なりが起きない** |
+| `--keep-coords`（写す） | HTML と1枚ずつ見比べるとき、回帰見本を通すとき | HTML の座標をそのまま置く。**枠が縦に伸びると重なる** |
 
 `--relayout` でも**動かさないもの**がある。ロゴなど画像を含む枠、
 上端・下端の帯、`data-pin` の付いた枠。**器が崩れると直す手間のほうが大きい。**

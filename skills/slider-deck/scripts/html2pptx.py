@@ -553,10 +553,14 @@ def main():
     ap.add_argument("--px-per-pt", type=float,
                     help="px→pt の換算係数。既定はマニフェストの `1pt = <n>px`、"
                          "それも無ければ 96dpi（1.3333）")
+    # **既定は「任せる」。**座標を写すと、PowerPoint が枠を縦に伸ばすたびに重なる。
+    # 実績では18枚中12枚が崩れ、そのすべてが縦の伸びだった
     ap.add_argument("--relayout", action="store_true",
-                    help="**HTML の座標を写さない。**枠を行に束ね、余白をそろえて"
-                         "敷き直す。器（ロゴ・上下の帯）は動かさない。"
-                         "**重なりが出たら、まずこれを付けて変換し直す**")
+                    help="（既定。明示しなくてよい）枠を行に束ね、余白をそろえて敷き直す")
+    ap.add_argument("--keep-coords", action="store_true",
+                    help="**HTML の座標をそのまま写す。**"
+                         "HTML と1枚ずつ見比べるときだけ使う。"
+                         "**枠が縦に伸びると重なる**")
     ap.add_argument("--potx", action="store_true",
                     help="PowerPoint テンプレート（.potx）として出す。"
                          "**実物で見た目を確かめるときに使う**")
@@ -571,7 +575,8 @@ def main():
         out = Path(args.out) if args.out else files[0].with_suffix(default_ext)
         pptx_out = out.with_suffix(".pptx") if args.potx else out
         guard_overwrite(out, args.force)
-        build_absolute(files, pptx_out, args.px_per_pt, args.relayout)
+        build_absolute(files, pptx_out, args.px_per_pt,
+                       relayout=not args.keep_coords)
         if args.potx:
             to_potx(pptx_out, out)
             if pptx_out != out:

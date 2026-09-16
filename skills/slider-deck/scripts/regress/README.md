@@ -2,11 +2,11 @@
 
 **過去に壊れた場所を、次の改訂でまた壊さないために置いてある。**
 
-`60_revise.md`「変種で壊れたら、制約を足すだけでなく検証にも足す」の受け皿。
+`55_revise.md`「変種で壊れたら、制約を足すだけでなく検証にも足す」の受け皿。
 **検査を緩めたら、必ずここを通す。** 緩めすぎて盲目になっていないかを見る。
 
 ```bash
-python3 scripts/html2pptx.py scripts/regress/01_overlap_and_spill.html -o /tmp/r1.pptx --force
+python3 scripts/html2pptx.py scripts/regress/01_overlap_and_spill.html -o /tmp/r1.pptx --keep-coords --force
 python3 scripts/fit_check.py check /tmp/r1.pptx
 ```
 
@@ -66,9 +66,10 @@ python3 scripts/probe_pptx.py /tmp/f06.pptx
 | 帯（上端・高さ56px） | **動かない** | 器が崩れる。ロゴや見出しの位置が毎回変わる |
 | 大きさの違う塗り箱3つ | **警告1件** | 数字の入らないグラフを、気づかず提出する |
 | **同じ大きさの札3枚** | **警告が出ない** | 誤検出。毎回「これは違います」と説明することになる |
+| `--keep-coords` を付けたとき | **重なりが出る** | 既定を変えたときに、写す経路が壊れていても気づけない |
 
 ```bash
-python3 scripts/html2pptx.py scripts/regress/07_relayout_and_boxchart.html -o /tmp/f07.pptx --relayout
+python3 scripts/html2pptx.py scripts/regress/07_relayout_and_boxchart.html -o /tmp/f07.pptx
 python3 scripts/fit_check.py check /tmp/f07.pptx   # 指摘 0 件
 ```
 

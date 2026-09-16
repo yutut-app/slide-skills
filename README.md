@@ -195,8 +195,8 @@ skills/slider-deck/assets/templates/
 | `make_html.py` | .pptx テンプレートから編集用 HTML を起こす | craft |
 | `html_png.py` | **HTML を絵にする。**利用者が見ている絵そのもの | craft |
 | `extract_assets.py` | 実物の .pptx から画像（ロゴ）を取り出す | craft |
-| `handoff.py` | 引き継ぎメモ。`--fingerprint` で版と指紋 | craft |
-| `html2pptx.py` | **HTML → pptx** | deck |
+| `handoff.py` | 引き継ぎメモ。`--fingerprint` で版と指紋、**`--expect` で違えば止める** | craft / deck |
+| `html2pptx.py` | **HTML → pptx**（位置は既定で組み直す。写すなら `--keep-coords`） | deck |
 | `stage0.py` | **段階0。**1枚だけ変換してテンプレート自体のずれを潰す | deck |
 | `fit_check.py budget` | **文言を書く前。**入る文字数と縦グリッド | deck |
 | `fit_check.py check` | 作った後。重なり・はみ出し・溢れ | deck |

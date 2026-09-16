@@ -15,7 +15,7 @@
 
 ## 1. なぜ HTML を載せ替えるのか
 
-資料は **HTML が正本、pptx は派生物**（slider-craft `48_html.md`）。
+資料は **HTML が正本、pptx は派生物**（slider-craft `<slider-craft>/references/48_html.md`）。
 
 ```
 HTML  ← 正本。直すのはここ
@@ -76,7 +76,7 @@ python3 scripts/reskin_html.py <作業ディレクトリ> --to <テンプレ名>
 ```
 
 **元を上書きしない。** `-o` は必須にしてある。
-戻れなくなると、どちらが新しいか分からなくなる（`49_handoff.md` 2章）。
+戻れなくなると、どちらが新しいか分からなくなる（`<slider-craft>/references/49_handoff.md` 2章）。
 
 `images/` と `print.html` も移行先のものを揃えて出す。
 
@@ -150,7 +150,7 @@ python3 <slider-deck>/scripts/qa_render.py deck/deck.pptx -o qa
 ```
 
 **この行を報告にそのまま貼る。**「確認しました」の代わりにならない
-（slider-craft `60_qa.md` / `scripts/checked.py`）。
+（slider-craft `<slider-deck>/references/60_qa.md` / `scripts/checked.py`）。
 
 ### 数だけ見ない。値を見る
 
