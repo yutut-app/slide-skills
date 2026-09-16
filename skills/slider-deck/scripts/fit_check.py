@@ -256,6 +256,22 @@ def body_pt(sh, default=18.0):
     return max(sizes) if sizes else default
 
 
+def filled(shp) -> bool:
+    """塗りのある図形か。**帯やカードを見分けるため。**"""
+    try:
+        return shp.fill.type == 1        # MSO_FILL.SOLID
+    except (AttributeError, TypeError, ValueError):
+        return False
+
+
+def centered(shp) -> bool:
+    """段落が中央ぞろえか。1段落でも中央なら中央とみなす。"""
+    from pptx.enum.text import PP_ALIGN
+    if not shp.has_text_frame:
+        return False
+    return any(pa.alignment == PP_ALIGN.CENTER for pa in shp.text_frame.paragraphs)
+
+
 def cmd_check(args):
     import checked
     from pptx import Presentation
@@ -327,6 +343,29 @@ def cmd_check(args):
                 findings.append((i, "溢れ",
                                  f"「{text[:14]}」が {need} 行必要だが枠は {cap} 行分"
                                  f"（{pt:.0f}pt・行間 {sp:.2f}・幅 {r[2]:.2f}in）"))
+
+        # 帯の上の文字が、帯の中心とそろっていない
+        # **意匠の話なので不合格にしない。配布元に報告するだけ。**
+        # 帯（塗りがあって文字を持たない枠）に、中央ぞろえの文字が載っていて、
+        # 文字の枠が帯の 6 割以上を占めるなら、**帯いっぱいに見せる意図**とみなす。
+        # バッジのように意図して片側へ寄せたものを拾わないための線引き。
+        for sa, ra, ta in items:
+            if ta or not filled(sa):
+                continue
+            for sb, rb, tb in items:
+                if sb is sa or not tb or not centered(sb):
+                    continue
+                if not (ra[0] <= rb[0] and rb[0] + rb[2] <= ra[0] + ra[2]
+                        and ra[1] - 0.03 <= rb[1] <= ra[1] + ra[3] + 0.03):
+                    continue
+                if ra[2] <= 0 or rb[2] < ra[2] * 0.6:
+                    continue
+                dx = (rb[0] + rb[2] / 2) - (ra[0] + ra[2] / 2)
+                if abs(dx) > 0.02:
+                    findings.append((i, "中心ずれ",
+                                     f"「{tb[:10]}」が、下の帯の中心から {dx:+.2f}in ずれている"
+                                     f"（帯 {ra[2]:.2f}in / 文字の枠 {rb[2]:.2f}in）。"
+                                     f"**帯と同じ left/width にする。配布元の担当**"))
 
         # 隙間が足りない（縦に並ぶ要素）。**まとめてから足す**（下の gaps）
         text_items = sorted([(r, t, body_pt(s)) for s, r, t in items if t],

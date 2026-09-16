@@ -1,0 +1,27 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="px-per-pt" content="1.333333">
+<title>帯の上の文字の中心</title>
+<style>
+.slide { width: 1280px; height: 720px; position: relative; font-family: Verdana, Meiryo; }
+.band  { position: absolute; left: 40px; top: 100px; width: 1200px; height: 80px;
+         background: #008096; }
+/* ❌ 幅が違う中央ぞろえ → 中心がずれる。**拾われるべき** */
+.bad   { position: absolute; left: 40px; top: 118px; width: 900px; height: 40px;
+         color: #fff; text-align: center; }
+.band2 { position: absolute; left: 40px; top: 260px; width: 1200px; height: 80px;
+         background: #ebeae8; }
+/* ⭕️ 同じ left/width → 中心が一致。**拾われてはいけない** */
+.good  { position: absolute; left: 40px; top: 278px; width: 1200px; height: 40px;
+         text-align: center; }
+/* 🔺 バッジ（幅が6割未満の片寄せ）→ **拾われてはいけない** */
+.badge { position: absolute; left: 1000px; top: 420px; width: 200px; height: 40px;
+         background: #e08a1e; color: #fff; text-align: center; border-radius: 20px; }
+.band3 { position: absolute; left: 40px; top: 420px; width: 1200px; height: 40px;
+         background: #008096; }
+</style>
+<section class="slide">
+  <div class="band"></div><div class="bad">中心がずれる文字</div>
+  <div class="band2"></div><div class="good">中心が合う文字</div>
+  <div class="band3"></div><div class="badge">バッジ</div>
+</section>

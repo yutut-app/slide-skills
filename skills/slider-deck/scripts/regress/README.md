@@ -114,6 +114,21 @@ python3 scripts/html2pptx.py scripts/regress/10_shape_kinds.html -o /tmp/f10.ppt
 
 **`--keep-coords` で通す。**既定の整列は大きさを変えるので、角丸の深さも変わる。
 
+## 11 — 帯の上の文字の中心（`--keep-coords` で通す）
+
+**意匠の話なので不合格にしない。**配布元に報告するだけ。
+
+| 見るところ | 期待 |
+|---|---|
+| 幅の違う中央ぞろえの文字（帯の8割弱） | **1件だけ拾う** |
+| 帯と同じ `left`/`width` の文字 | **拾わない** |
+| バッジ（幅が帯の6割未満） | **拾わない**（意図した片寄せ） |
+
+```bash
+python3 scripts/html2pptx.py scripts/regress/11_band_text_center.html -o /tmp/f11.pptx --keep-coords
+python3 scripts/fit_check.py check /tmp/f11.pptx   # 中心ずれ 1件・不合格 0件
+```
+
 ---
 
 ## 不具合を直したら、ここに見本を足す ★
