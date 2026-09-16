@@ -96,6 +96,24 @@ python3 scripts/html2pptx.py scripts/regress/08_nested_chart_and_table.html -o /
 | 帯の上の白文字 | **帯の中に残る** | 帯の外へ出て、白地に白で**見えなくなる**（実案件で起きた） |
 | 縦に入りきらない枚 | **位置を写し、その旨を出す** | 並べ直すと、最後の行がフッターに重なる |
 
+## 10 — 図形の種類（`--keep-coords` で通す）
+
+**CSS の `border-radius` から形を決める。**四角で作ると意匠が変わる。
+
+| HTML | pptx | 角丸の深さ |
+|---|---|---|
+| 指定なし | `RECTANGLE` | — |
+| `border-radius: 26px`（高さ40px） | `ROUNDED_RECTANGLE` | **0.5**（丸帯） |
+| `border-radius: 12px` | `ROUNDED_RECTANGLE` | 0.1 |
+| `border-radius: 50%` | **`OVAL`** | — |
+| 角丸＋枠線 | `ROUNDED_RECTANGLE` ＋ 線色 | 0.15 |
+
+```bash
+python3 scripts/html2pptx.py scripts/regress/10_shape_kinds.html -o /tmp/f10.pptx --keep-coords
+```
+
+**`--keep-coords` で通す。**既定の整列は大きさを変えるので、角丸の深さも変わる。
+
 ---
 
 ## 不具合を直したら、ここに見本を足す ★

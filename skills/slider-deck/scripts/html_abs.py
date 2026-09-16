@@ -532,6 +532,37 @@ def looks_like_chart(el, rules, inherit):
     return False
 
 
+def shape_kind(style, w_px, h_px):
+    """CSS の `border-radius` から、pptx の図形の種類を決める。
+
+    **四角で作ると、HTML と見た目が変わる。**実案件では、角丸69・丸12・
+    大きな角丸8 の計89個が**すべて四角になっていた。**
+    丸バッジや帯の印象がまるごと変わるので、見た目の検査の前に効く。
+
+    戻り値は (種類, 角丸の深さ)。深さは短い辺に対する割合（0〜0.5）。
+    """
+    from pptx.enum.shapes import MSO_SHAPE
+
+    raw = str(style.get("border-radius") or "").strip()
+    if not raw:
+        return MSO_SHAPE.RECTANGLE, None
+    short = max(1.0, min(w_px or 1.0, h_px or 1.0))
+    if raw.endswith("%"):
+        try:
+            pct = float(raw.rstrip("%"))
+        except ValueError:
+            pct = 0.0
+        if pct >= 50:
+            return MSO_SHAPE.OVAL, None
+        r = short * pct / 100
+    else:
+        r = px(raw) or 0.0
+    if r <= 0:
+        return MSO_SHAPE.RECTANGLE, None
+    # 半径が短い辺の半分以上なら、**両端が半円の「丸帯」**
+    return MSO_SHAPE.ROUNDED_RECTANGLE, min(0.5, r / short)
+
+
 def add_shape(slide, el, style, rules, inherit, base_dir: Path, warn):
     left, top = px(style.get("left")), px(style.get("top"))
     w, h = px(style.get("width")), px(style.get("height"))
@@ -669,7 +700,13 @@ def add_shape(slide, el, style, rules, inherit, base_dir: Path, warn):
         return  # 中身も色も無いなら作らない
 
     if fill is not None or border:
-        shp = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, x, y, cx, cy)
+        kind, adj = shape_kind(style, w, h)
+        shp = slide.shapes.add_shape(kind, x, y, cx, cy)
+        if adj is not None:
+            try:
+                shp.adjustments[0] = adj
+            except (IndexError, ValueError):
+                pass       # 角丸を持たない図形。**形は合っているので進める**
         shp.shadow.inherit = False
         st = shp._element.find(
             "{http://schemas.openxmlformats.org/presentationml/2006/main}style")
