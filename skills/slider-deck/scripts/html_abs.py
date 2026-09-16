@@ -449,6 +449,40 @@ def text_blocks(el, rules, inherit):
     return blocks
 
 
+def looks_like_chart(el, rules, inherit):
+    """**箱で描いたグラフ**（棒を `<div>` で作ったもの）を見つける。
+
+    `<svg data-chart>` はネイティブのグラフになるが、**箱で描いたものは
+    ただの塗り図形として写る。**絵は似ていても、中に数字が入っていない。
+    受け取った側は PowerPoint でも Excel でも直せない。
+
+    黙って写すと気づけないので、**警告だけ出す。**出力は変えない。
+    条件は「塗られた兄弟が3つ以上あり、**大きさがそろっていない**」。
+    大きさがそろっているもの（KPI の札など）は、グラフではないので外す。
+    """
+    kids = [k for k in el.iter() if isinstance(k.tag, str) and k is not el]
+    by_parent = {}
+    for k in kids:
+        by_parent.setdefault(k.getparent(), []).append(k)
+    for group in by_parent.values():
+        filled = []
+        for k in group:
+            st = computed(k, rules, inherit)
+            if background_color(st) is None:
+                continue
+            hh, ww = px(st.get("height")), px(st.get("width"))
+            if hh is None and ww is None:
+                continue
+            filled.append((hh, ww))
+        if len(filled) < 3:
+            continue
+        for i in (0, 1):
+            vals = [v[i] for v in filled if v[i] is not None]
+            if len(vals) >= 3 and len(set(round(v, 1) for v in vals)) >= 3:
+                return True
+    return False
+
+
 def add_shape(slide, el, style, rules, inherit, base_dir: Path, warn):
     left, top = px(style.get("left")), px(style.get("top"))
     w, h = px(style.get("width")), px(style.get("height"))
@@ -521,6 +555,14 @@ def add_shape(slide, el, style, rules, inherit, base_dir: Path, warn):
                 " グラフは `assets/templates/charts/` `qc7/`、"
                 "作図は `qc7/` `n7/` を使う（`assets/templates/INDEX.md`）")
         return
+
+    if el.tag not in ("svg", "canvas") and looks_like_chart(el, rules, inherit):
+        # **絵は似ていても、中に数字が無い。**受け取った側が直せない
+        warn.append(
+            "**箱で描いたグラフを、塗り図形のまま写した。**"
+            "中に数字が入らないので、PowerPoint でも Excel でも直せない。"
+            "配布元に `data-chart` と `data-values` を足してもらう"
+            "（足りていれば、中にワークシートを持つグラフになる）")
 
     blocks = text_blocks(el, rules, inherit)
     fill = color(background_color(style))
@@ -984,7 +1026,7 @@ def background_color(style):
     return m.group(0)
 
 
-def build_slide(prs, doc, base_dir: Path, warn):
+def build_slide(prs, doc, base_dir: Path, warn, relayout=False):
     rules = []
     for style_el in doc.xpath("//style"):
         rules += parse_css(style_el.text or "")
@@ -1002,12 +1044,17 @@ def build_slide(prs, doc, base_dir: Path, warn):
     # 以前は先頭だけを変換し、残りを黙って捨てていた。
     # 15枚入りの deck.html を渡して「変換: 1 枚」で正常終了した実績がある。
     made = None
+    sw, sh = slide_size_px(doc)
     for root in slides:
         made = prs.slides.add_slide(prs.slide_layouts[6])   # 白紙
-        for el in root.iterchildren():
-            if not isinstance(el.tag, str):
-                continue                                    # コメントなど
-            st = computed(el, rules, inherit)
+        items = [(el, computed(el, rules, inherit))
+                 for el in root.iterchildren() if isinstance(el.tag, str)]
+        if relayout:
+            # **座標を写さず、行に束ねて敷き直す。**
+            # 写した座標は、PowerPoint が枠を縦に伸ばしたぶんだけ重なる
+            import relayout as RL
+            RL.relayout(items, sw, sh, warn)
+        for el, st in items:
             add_shape(made, el, st, rules, inheritable(st), base_dir, warn)
     return made
 

@@ -58,6 +58,20 @@ python3 scripts/probe_pptx.py /tmp/f06.pptx
 
 **unzip しない。**`probe_pptx.py` が上の観点を1つの表で出す。
 
+## 07 — 整列と、箱で描いたグラフ
+
+| 見るところ | 期待 | 壊れると |
+|---|---|---|
+| `--relayout` を付けたときの重なり | **0件** | 写した座標のままでは、伸びた枠が下・隣と重なる |
+| 帯（上端・高さ56px） | **動かない** | 器が崩れる。ロゴや見出しの位置が毎回変わる |
+| 大きさの違う塗り箱3つ | **警告1件** | 数字の入らないグラフを、気づかず提出する |
+| **同じ大きさの札3枚** | **警告が出ない** | 誤検出。毎回「これは違います」と説明することになる |
+
+```bash
+python3 scripts/html2pptx.py scripts/regress/07_relayout_and_boxchart.html -o /tmp/f07.pptx --relayout
+python3 scripts/fit_check.py check /tmp/f07.pptx   # 指摘 0 件
+```
+
 ---
 
 ## 不具合を直したら、ここに見本を足す ★

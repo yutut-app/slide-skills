@@ -478,7 +478,7 @@ def guard_overwrite(out: Path, force: bool):
     )
 
 
-def build_absolute(files, out: Path, px_per_pt=None):
+def build_absolute(files, out: Path, px_per_pt=None, relayout=False):
     """px 絶対座標の HTML 群を1つの pptx にする。テンプレートの pptx は要らない。"""
     import html_abs as HA
     from pptx import Presentation as _P
@@ -504,7 +504,7 @@ def build_absolute(files, out: Path, px_per_pt=None):
     for i, f in enumerate(files, 1):
         doc = LH.parse(str(f)).getroot()
         before, n_before = len(warn), len(prs.slides._sldIdLst)
-        HA.build_slide(prs, doc, f.resolve().parent, warn)
+        HA.build_slide(prs, doc, f.resolve().parent, warn, relayout)
         made = len(prs.slides._sldIdLst) - n_before
         title = doc.findtext(".//title") or f.stem
         # **1ファイル=1枚とは限らない。**枚数を出さないと、
@@ -553,6 +553,10 @@ def main():
     ap.add_argument("--px-per-pt", type=float,
                     help="px→pt の換算係数。既定はマニフェストの `1pt = <n>px`、"
                          "それも無ければ 96dpi（1.3333）")
+    ap.add_argument("--relayout", action="store_true",
+                    help="**HTML の座標を写さない。**枠を行に束ね、余白をそろえて"
+                         "敷き直す。器（ロゴ・上下の帯）は動かさない。"
+                         "**重なりが出たら、まずこれを付けて変換し直す**")
     ap.add_argument("--potx", action="store_true",
                     help="PowerPoint テンプレート（.potx）として出す。"
                          "**実物で見た目を確かめるときに使う**")
@@ -567,7 +571,7 @@ def main():
         out = Path(args.out) if args.out else files[0].with_suffix(default_ext)
         pptx_out = out.with_suffix(".pptx") if args.potx else out
         guard_overwrite(out, args.force)
-        build_absolute(files, pptx_out, args.px_per_pt)
+        build_absolute(files, pptx_out, args.px_per_pt, args.relayout)
         if args.potx:
             to_potx(pptx_out, out)
             if pptx_out != out:
