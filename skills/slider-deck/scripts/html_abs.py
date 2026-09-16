@@ -592,11 +592,26 @@ def add_shape(slide, el, style, rules, inherit, base_dir: Path, warn):
     # column なら逆。両方とも縦に倒していたため、
     # `.footer-page{display:flex;justify-content:center}` のページ番号が
     # 横に中央ぞろえされず、箱からはみ出していた。
+    # **`display:flex` は、枠ではなく中の要素に書かれていることがある。**
+    # 外側だけを見ると中央ぞろえを見落とし、**高い枠ほど上寄せが目立つ**。
+    # 体裁の読み取り（text_blocks）と同じで、1つだけの子を辿る
+    flex_st = style
+    if style.get("display") != "flex":
+        node = el
+        for _ in range(3):
+            kids = [k for k in node if isinstance(k.tag, str) and k.tag != "br"]
+            if len(kids) != 1:
+                break
+            node = kids[0]
+            st_in = computed(node, rules, style)
+            if st_in.get("display") == "flex":
+                flex_st = st_in
+                break
     v_center = h_center = False
-    if style.get("display") == "flex":
-        col = "column" in (style.get("flex-direction") or "")
-        jc = style.get("justify-content") == "center"
-        ai = style.get("align-items") == "center"
+    if flex_st.get("display") == "flex":
+        col = "column" in (flex_st.get("flex-direction") or "")
+        jc = flex_st.get("justify-content") == "center"
+        ai = flex_st.get("align-items") == "center"
         v_center, h_center = (jc, ai) if col else (ai, jc)
     tf.vertical_anchor = MSO_ANCHOR.MIDDLE if v_center else MSO_ANCHOR.TOP
 
@@ -858,7 +873,11 @@ def add_table(slide, tbl, style, rules, inherit, x, y, cx, h, warn):
 
     **画像やテキストの寄せ集めにしない。** 受け取った側が数字を直せることが、
     資料を渡す目的そのもの（`50_build.md`）。
-    罫線と塗りは PowerPoint の既定の表スタイルに任せる。
+    **塗りは CSS を写す。** ヘッダの帯色・行の交互塗り・強調行の色は、
+    テンプレートが意図して `<td>` に書いている。既定に任せると
+    **全部が白や薄いグレーに落ちて、意図が消える。**
+
+    **罫線だけは PowerPoint の既定に任せる。**
     CSS で作った罫線の色や太さは写さない（**配布元の規約**（48_html.md）「効かないこと」）。
     """
     rows = tbl.xpath(".//tr")
@@ -923,6 +942,13 @@ def add_table(slide, tbl, style, rules, inherit, x, y, cx, h, warn):
             cell.margin_bottom = Emu(int(cpb * EMU_PER_PX))
             cell.vertical_anchor = MSO_ANCHOR.MIDDLE
 
+            # **塗りは CSS から写す。**既定に任せると意図が消える
+            bg = background_color(td_style)
+            fill_rgb = color(bg) if bg else None
+            if fill_rgb is not None:
+                cell.fill.solid()
+                cell.fill.fore_color.rgb = fill_rgb
+
             # `cell.text = txt` が作った run を捨てて、和文で切り分けて入れ直す
             para0 = cell.text_frame.paragraphs[0]
             for r in list(para0.runs):
@@ -932,7 +958,7 @@ def add_table(slide, tbl, style, rules, inherit, x, y, cx, h, warn):
     if any(r.xpath("./th") for r in rows):
         table.first_row = True
     warn.append(f"表を pptx のネイティブの表にした（{len(rows)}行×{ncol}列）。"
-                "**罫線と塗りは PowerPoint の既定に従う。**CSS の指定は写さない")
+                "**塗りは CSS を写した。罫線は PowerPoint の既定に従う。**")
 
 
 def background_color(style):

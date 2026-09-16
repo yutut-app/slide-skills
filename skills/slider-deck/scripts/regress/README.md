@@ -47,10 +47,13 @@ done
 | 文字サイズに**既定の18pt が無い**こと | 8〜12pt | 体裁が `<span>` 側だけにあると既定に落ち、折り返しが変わる |
 | 表セルの `marL/marR` | **57150**（CSS の 6px） | 既定 91440（0.1in）だと収まる文字が折り返し、行が伸びる |
 | 記号を含む run の `latin` | **和文書体** | `→ ① ◎ ℃` が欧文書体に渡ると字幅が変わる |
+| 表セルの塗り | **`008096` / `EBEAE8`** | 既定に任せると、ヘッダ帯も交互塗りも白や薄グレーに落ちる |
+| **入れ子に flex がある枠**の縦位置 | **MIDDLE** | 外側だけ見ると中央ぞろえを見落とし、**高い枠ほど上寄せが目立つ** |
 
 ```bash
 python3 scripts/html2pptx.py scripts/regress/06_nested_style_and_autofit.html -o /tmp/f06.pptx
 python3 scripts/probe_pptx.py /tmp/f06.pptx
+# 塗りと縦位置は probe に出ないので、python-pptx で cell.fill / vertical_anchor を見る
 ```
 
 **unzip しない。**`probe_pptx.py` が上の観点を1つの表で出す。

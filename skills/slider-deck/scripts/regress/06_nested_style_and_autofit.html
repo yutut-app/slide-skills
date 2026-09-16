@@ -30,6 +30,16 @@
   th { background:#008096; }
   th span { color:#fff; }
 
+  /* ⑥ 表の塗り: ヘッダ帯と交互塗りは CSS のとおりに出ること */
+  th { background:#008096; }
+  tr.alt td { background:#ebeae8; }
+
+  /* ⑦ 縦中央: flex が枠ではなく中の div にある。上寄せになってはいけない */
+  .outer { left:40px; top:330px; width:320px; height:120px; border:1px solid #888; }
+  .outer .inner { display:flex; flex-direction:column; justify-content:center;
+                  height:100%; }
+  .outer p { font-size:14px; }
+
   /* ⑤ 和文に混ざる記号: 矢印・囲み数字・℃ も和文扱いにする */
   .symbols { left:700px; top:200px; width:480px; height:60px; }
   .symbols p { font-size:14px; }
@@ -44,9 +54,10 @@
     <tr><th><div><p><span>項目</span></p></div></th>
         <th><div><p><span>件数</span></p></div></th>
         <th><div><p><span>比率</span></p></div></th></tr>
-    <tr><td><div><p><span>ネジの緩み</span></p></div></td>
+    <tr class="alt"><td><div><p><span>ネジの緩み</span></p></div></td>
         <td><div><p><span>79</span></p></div></td>
         <td><div><p><span>62%</span></p></div></td></tr>
   </table>
+  <div class="tb outer"><div class="inner"><p>枠ではなく中の div に flex。縦中央に出ること</p></div></div>
   <div class="tb symbols"><p>工程A → 工程B ①②③ ◎○△ 22.5℃ まで</p></div>
 </div></body></html>
