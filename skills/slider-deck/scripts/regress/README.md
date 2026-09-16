@@ -35,3 +35,20 @@ for f in scripts/regress/0*.html; do
   python3 scripts/html2pptx.py "$f" -o "/tmp/reg_$(basename "$f" .html).pptx"
 done
 ```
+
+## 06_nested_style_and_autofit.html
+
+**実案件で18枚中12枚が崩れた型を、まとめて押さえる見本。**
+
+| 見るところ | 期待 | 壊れると |
+|---|---|---|
+| `spAutoFit` が**無い**こと | 0件 | 折り返した枠が下へ伸び、隣・下の要素と重なる |
+| `wrap="none"` が**有る**こと | 1件以上 | `nowrap` が中の `<p>` にあると折り返し、丸バッジが枠外へこぼれる |
+| 文字サイズに**既定の18pt が無い**こと | 8〜12pt | 体裁が `<span>` 側だけにあると既定に落ち、折り返しが変わる |
+| 表セルの `marL/marR` | **57150**（CSS の 6px） | 既定 91440（0.1in）だと収まる文字が折り返し、行が伸びる |
+| 記号を含む run の `latin` | **和文書体** | `→ ① ◎ ℃` が欧文書体に渡ると字幅が変わる |
+
+```bash
+python3 scripts/html2pptx.py scripts/regress/06_nested_style_and_autofit.html -o /tmp/f06.pptx
+# unzip して ppt/slides/slide1.xml を上の観点で見る
+```

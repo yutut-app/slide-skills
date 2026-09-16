@@ -134,14 +134,23 @@ def size_of(path: Path):
     return 1280, 720
 
 
-def _run(browser, src: Path, out: Path, w: int, h: int, scale: float, profile):
+def _run(browser, src: Path, out: Path, w: int, h: int, scale: float, profile,
+         headless="--headless=new"):
+    """1回だけ起動してみる。
+
+    **ヘッドレスの方式を引数にする。** 近年の Edge / Chrome は
+    旧 `--headless` を落としており、**起動はするのに PNG が1枚も書かれない。**
+    """
     cmd = [
-        browser, "--headless", "--disable-gpu", "--hide-scrollbars",
+        browser, headless, "--disable-gpu", "--hide-scrollbars",
         "--no-sandbox", "--force-device-scale-factor=%g" % scale,
         "--virtual-time-budget=2000",
         "--no-first-run", "--no-default-browser-check", "--disable-extensions",
         f"--window-size={w},{h}",
-        f"--screenshot={out}",
+        # **絶対パスで渡す。**相対だとブラウザ側の作業ディレクトリを基準に
+        # 書かれ、こちらの out.exists() と食い違って
+        # 「PNG は出来ているのに失敗」と誤報する
+        f"--screenshot={out.resolve()}",
     ]
     if profile:
         cmd.insert(1, f"--user-data-dir={profile}")
@@ -153,27 +162,31 @@ def _run(browser, src: Path, out: Path, w: int, h: int, scale: float, profile):
 
 
 def shoot(browser, src: Path, out: Path, w: int, h: int, scale: float, profile):
-    """1枚を PNG にする。**まず素の設定で試し、駄目なら専用プロファイルで再試行する。**
+    """1枚を PNG にする。**新旧のヘッドレス × プロファイル有無を順に試す。**
 
-    | | |
+    | 試す順 | なぜ |
     |---|---|
-    | 素の設定 | ふつうはこれで通る |
-    | 専用プロファイル | **利用者がブラウザを開いていると、既定のプロファイルを
-      掴めずに失敗することがある**（Windows の Edge は常駐しがち） |
+    | 新ヘッドレス・素 | ふつうはこれで通る |
+    | 新ヘッドレス・専用プロファイル | **ブラウザが起動中だと既定のプロファイルを掴めない** |
+    | 旧ヘッドレス・素 | 古い版のブラウザ向け |
+    | 旧ヘッドレス・専用プロファイル | 同上 |
+
+    **どれかが通れば成功。全部落ちたら、全部のエラーをまとめて返す。**
+    1つ目のエラーだけを見せると、本当の原因が隠れる。
 
     **専用プロファイルを最初から使わない。**
     macOS の Chrome では、それを付けると
-    `Trying to load the allocator multiple times` で**起動に失敗する**（実測）。
-    **片方の環境で効く対処を、全環境の既定にしない。**
+    `Trying to load the allocator multiple times` で起動に失敗する（実測）。
     """
     out.parent.mkdir(parents=True, exist_ok=True)
-    size, err = _run(browser, src, out, w, h, scale, None)
-    if size is not None:
-        return size, None
-    size, err2 = _run(browser, src, out, w, h, scale, profile)
-    if size is not None:
-        return size, None
-    return None, f"{err} ／ 再試行も失敗: {err2}"
+    errs = []
+    for headless in ("--headless=new", "--headless"):
+        for prof in (None, profile):
+            size, err = _run(browser, src, out, w, h, scale, prof, headless)
+            if size is not None:
+                return size, None
+            errs.append(f"[{headless}{'' if prof is None else ' +profile'}] {err}")
+    return None, " ／ ".join(e for e in errs if e)[-300:]
 
 
 def main():

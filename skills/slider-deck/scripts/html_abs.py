@@ -33,7 +33,7 @@ from pathlib import Path
 
 from pptx.dml.color import RGBColor
 from pptx.enum.shapes import MSO_SHAPE
-from pptx.enum.text import MSO_ANCHOR, PP_ALIGN
+from pptx.enum.text import MSO_ANCHOR, MSO_AUTO_SIZE, PP_ALIGN
 from pptx.util import Emu, Pt
 
 EMU_PER_PX = 9525          # 96px/inch → 914400/96
@@ -316,7 +316,7 @@ def set_theme_fonts(prs, latin, ja):
 # pptx を組む
 # ---------------------------------------------------------------------------
 
-def set_run(run, style, base_ja=None, base_latin=None):
+def set_run(run, style, base_ja=None, base_latin=None, force_ja=False):
     size = px(style.get("font-size"))
     if size:
         run.font.size = Pt(round(size / PX_PER_PT, 1))
@@ -328,6 +328,10 @@ def set_run(run, style, base_ja=None, base_latin=None):
     latin, ja = font_faces(style)
     latin = latin or base_latin
     ja = ja or base_ja
+    # **和文だけの run は latin にも和文書体を書く。**
+    # 描画は変わらないが、PowerPoint のフォント欄に和文書体が出る
+    if force_ja and ja:
+        latin = ja
     if latin:
         run.font.name = latin
     rPr = run.font._rPr
@@ -339,6 +343,55 @@ def set_run(run, style, base_ja=None, base_latin=None):
             el = rPr.makeelement(f"{A}{tag}", {})
             rPr.append(el)
         el.set("typeface", face)
+
+
+# **和文として扱う文字。**かな・漢字・全角記号に加えて、
+# 矢印・囲み数字・幾何学記号・文字様記号も入れる。
+# これらは全角幅で組まれるので、欧文書体に渡すと字幅が変わり、
+# 前後の字間が崩れる（→ ① ◎ ○ △ ■ ▲ ℃ で実際に起きた）
+_JA_RE = re.compile(
+    r"[\u3000-\u303f\u3040-\u309f\u30a0-\u30ff\u3400-\u4dbf\u4e00-\u9fff"
+    r"\uf900-\ufaff\uff00-\uff60\uffe0-\uffe6"
+    r"\u2010-\u201f\u2030-\u205e\u2100-\u214f\u2190-\u21ff\u2460-\u24ff"
+    r"\u25a0-\u25ff\u2600-\u26ff\u3200-\u32ff]")
+
+
+def split_ja(text):
+    """文字列を、和文の塊と欧文の塊に切る。
+
+    **1つの run に和文と欧文を混ぜると、run には書体を1つしか書けない。**
+    latin に欧文・ea に和文を入れて PowerPoint に任せることになり、
+    描画は正しいが**フォント欄には latin しか出ず**、
+    「和文まで欧文書体になっている」と読めてしまう。
+
+    切れば和文 run の latin にも和文書体を書けるので、
+    **見た目は同じまま、フォント欄の表示も一致する。**
+
+    空白は直前の塊に付ける。**切り口をむやみに増やさない。**
+    """
+    out, cur, cur_ja = [], "", None
+    for ch in text:
+        ja = bool(_JA_RE.match(ch))
+        if ch.isspace() and cur:
+            cur += ch
+            continue
+        if cur_ja is None or ja == cur_ja:
+            cur += ch
+            cur_ja = ja
+        else:
+            out.append((cur_ja, cur))
+            cur, cur_ja = ch, ja
+    if cur:
+        out.append((bool(cur_ja), cur))
+    return out
+
+
+def add_runs(p, text, st, ja0, latin0):
+    """段落に、和文／欧文で切り分けた run を並べる。"""
+    for is_ja, chunk in split_ja(text):
+        r = p.add_run()
+        r.text = chunk
+        set_run(r, st, base_ja=ja0, base_latin=latin0, force_ja=is_ja)
 
 
 ALIGN = {"center": PP_ALIGN.CENTER, "right": PP_ALIGN.RIGHT,
@@ -356,6 +409,13 @@ def text_blocks(el, rules, inherit):
         if node is el or node.tag not in ("p", "li"):
             continue
         st = computed(node, rules, inherit)
+        # **大きさ・色・太さが、<p> ではなく中の <span> に書かれていることがある。**
+        # <p> だけを見ると既定の文字サイズに落ち、折り返しが変わって枠からこぼれる。
+        # 中身が1つの要素だけに包まれているときは、そちらの体裁を使う
+        inner = [k for k in node if isinstance(k.tag, str) and k.tag != "br"]
+        if len(inner) == 1 and not (node.text or "").strip() \
+                and not (inner[0].tail or "").strip():
+            st = computed(inner[0], rules, st)
         # <br> で分ける
         chunks, cur = [], (node.text or "")
         for child in node:
@@ -495,7 +555,18 @@ def add_shape(slide, el, style, rules, inherit, base_dir: Path, warn):
         shp = slide.shapes.add_textbox(x, y, cx, cy)
 
     tf = shp.text_frame
-    tf.word_wrap = style.get("white-space") != "nowrap"
+    # **`white-space:nowrap` は枠ではなく中の <p> に書かれていることがある。**
+    # 枠だけを見ると折り返しありと判定し、丸バッジの文字が2行になって
+    # 枠からこぼれ、下の行と重なった
+    nowrap = style.get("white-space") == "nowrap" or (
+        bool(blocks) and all(st.get("white-space") == "nowrap"
+                             for st, _ in blocks))
+    tf.word_wrap = not nowrap
+    # **枠を自動で広げない。**
+    # python-pptx の add_textbox は <a:spAutoFit/> を付けるため、
+    # PowerPoint が枠を縦に広げる。HTML は固定高なので、
+    # 折り返した枠だけが下へ伸びて隣や下の要素と重なる（18枚中12枚で発生）
+    tf.auto_size = MSO_AUTO_SIZE.NONE
     pt_, pr_, pb_, pl_ = padding_px(style)
     tf.margin_left = Emu(int(pl_ * EMU_PER_PX))
     tf.margin_right = Emu(int(pr_ * EMU_PER_PX))
@@ -528,9 +599,7 @@ def add_shape(slide, el, style, rules, inherit, base_dir: Path, warn):
                 p.line_spacing = Pt(round(px(lh) / PX_PER_PT, 1))
             elif unitless(lh) is not None:
                 p.line_spacing = unitless(lh)   # 倍率はそのまま渡す
-        r = p.add_run()
-        r.text = txt
-        set_run(r, st, base_ja=ja0, base_latin=latin0)
+        add_runs(p, txt, st, ja0, latin0)
 
 
 # HTML の `data-figure` から、使うテンプレートを引く。
@@ -816,9 +885,37 @@ def add_table(slide, tbl, style, rules, inherit, x, y, cx, h, warn):
             cell.text = txt
             cell_style = computed(cells[ci], rules, inherit) if ci < len(cells) \
                 else dict(inherit)
-            for para in cell.text_frame.paragraphs:
-                for run in para.runs:
-                    set_run(run, cell_style, base_ja=ja0, base_latin=latin0)
+            # **セルの中身は td > div > p > span と包まれ、
+            # font-size は一番内側にあることがある。**
+            # td だけを見ると既定の文字サイズに落ち、表が本文より大きくなって
+            # 行が伸び、表がスライドの外へはみ出す
+            # **余白は td 自身から取る。**padding は継承されないので、
+            # 内側へ降りた後の体裁から読むと 0 になる（実際にそうなった）
+            td_style = cell_style
+            if ci < len(cells):
+                node = cells[ci]
+                while True:
+                    kids = [k for k in node if isinstance(k.tag, str)]
+                    if len(kids) != 1:
+                        break
+                    node = kids[0]
+                    cell_style = computed(node, rules, cell_style)
+
+            # **セルの余白も CSS から取る。**
+            # PowerPoint の既定は左右 0.1in（9.6px）で、CSS の padding より広い。
+            # 既定のままだと収まるはずの文字が折り返し、行が伸びる
+            cpt, cpr, cpb, cpl = padding_px(td_style)
+            cell.margin_left = Emu(int(cpl * EMU_PER_PX))
+            cell.margin_right = Emu(int(cpr * EMU_PER_PX))
+            cell.margin_top = Emu(int(cpt * EMU_PER_PX))
+            cell.margin_bottom = Emu(int(cpb * EMU_PER_PX))
+            cell.vertical_anchor = MSO_ANCHOR.MIDDLE
+
+            # `cell.text = txt` が作った run を捨てて、和文で切り分けて入れ直す
+            para0 = cell.text_frame.paragraphs[0]
+            for r in list(para0.runs):
+                r._r.getparent().remove(r._r)
+            add_runs(para0, txt, cell_style, ja0, latin0)
 
     if any(r.xpath("./th") for r in rows):
         table.first_row = True

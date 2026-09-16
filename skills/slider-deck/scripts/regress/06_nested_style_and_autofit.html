@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ja"><head><meta charset="utf-8" /><title>入れ子の体裁と枠の自動拡張</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Verdana','Meiryo',sans-serif; }
+  .slide { width:1280px; height:720px; position:relative; background:#fff; }
+  .tb { position:absolute; padding:4.8px 9.6px; }
+
+  /* ① 枠の自動拡張: 固定高に対して文字が多い。枠が下へ伸びてはいけない */
+  .fixed-box { left:40px; top:40px; width:300px; height:60px; border:1px solid #888; }
+  .fixed-box p { font-size:16px; line-height:1.4; }
+  .below { left:40px; top:110px; width:300px; height:40px; background:#eee; }
+  .below p { font-size:14px; }
+
+  /* ② nowrap が中の <p> に付く: 折り返して枠外へこぼれてはいけない */
+  .badge { left:400px; top:40px; width:90px; height:90px; border-radius:45px;
+           background:#008096; display:flex; justify-content:center;
+           align-items:center; }
+  .badge p { white-space:nowrap; font-size:13px; color:#fff; }
+
+  /* ③ 体裁が <span> 側だけにある: 既定サイズに落ちてはいけない */
+  .nested { left:540px; top:40px; width:360px; height:80px; }
+  .nested span { font-size:11px; color:#c00000; font-weight:bold; }
+
+  /* ④ 表のセルが td > div > p > span: font-size は span にある */
+  table { position:absolute; left:40px; top:200px; width:600px;
+          border-collapse:collapse; }
+  th, td { border:1px solid #999; padding:2px 6px; }
+  th span, td span { font-size:10.67px; }
+  th { background:#008096; }
+  th span { color:#fff; }
+
+  /* ⑤ 和文に混ざる記号: 矢印・囲み数字・℃ も和文扱いにする */
+  .symbols { left:700px; top:200px; width:480px; height:60px; }
+  .symbols p { font-size:14px; }
+</style></head>
+<body><div class="slide">
+  <div class="tb fixed-box"><p>固定高の枠に対して文字が多い段落。折り返しても枠は伸びないこと。</p></div>
+  <div class="tb below"><p>下の要素。上の枠に押されて重なってはいけない</p></div>
+  <div class="tb badge"><p>要対策</p></div>
+  <div class="tb nested"><p><span>体裁が span 側だけにある行。11pt で出ること</span></p></div>
+  <table>
+    <colgroup><col style="width:200px" /><col style="width:200px" /><col style="width:200px" /></colgroup>
+    <tr><th><div><p><span>項目</span></p></div></th>
+        <th><div><p><span>件数</span></p></div></th>
+        <th><div><p><span>比率</span></p></div></th></tr>
+    <tr><td><div><p><span>ネジの緩み</span></p></div></td>
+        <td><div><p><span>79</span></p></div></td>
+        <td><div><p><span>62%</span></p></div></td></tr>
+  </table>
+  <div class="tb symbols"><p>工程A → 工程B ①②③ ◎○△ 22.5℃ まで</p></div>
+</div></body></html>
