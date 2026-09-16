@@ -60,6 +60,18 @@ def px_per_pt_of(files, override=None):
         m = re.search(r"1\s*pt\s*=\s*([\d.]+)\s*px", man.read_text())
         if m:
             return float(m.group(1)), f"{man.parent.name}/template-manifest.md"
+    # **HTML 自身が持っていれば、それを使う。**
+    # テンプレートは git に入らないので、別の機械では手元に無いことがある。
+    # 係数が読めないと 96dpi に落ち、スライド寸法が狂う（実測で 780→960pt）。
+    # 資料の HTML に書いておけば、テンプレートが無くても正しく変換できる
+    for f in files:
+        try:
+            head = Path(f).read_text(encoding="utf-8")[:4000]
+        except OSError:
+            continue
+        m = re.search(r'<meta\s+name="px-per-pt"\s+content="([\d.]+)"', head)
+        if m:
+            return float(m.group(1)), f"{Path(f).name} の meta"
     return 4 / 3, "既定（96dpi）"
 
 
