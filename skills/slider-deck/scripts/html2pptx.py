@@ -521,7 +521,10 @@ def build_absolute(files, out: Path, px_per_pt=None, relayout=False):
           f"= {w * HA.EMU_PER_PX / EMU_PER_INCH:.3f}×{h * HA.EMU_PER_PX / EMU_PER_INCH:.3f}in "
           f"= {w / scale:.0f}×{h / scale:.0f}pt")
     print(f"px→pt 換算: 1pt = {scale}px（出どころ: {src}）")
-    print("**HTML の座標をそのまま写している。**テンプレートの pptx は使っていない")
+    print((("**位置は組み直した。**行に束ね、余白をそろえた"
+                   if relayout else
+                   "**HTML の座標をそのまま写した**（--keep-coords）")
+                  + "。テンプレートの pptx は使っていない"))
     print(f"書体: 英数字={latin0 or '（未指定）'} / 日本語={ja0 or '（未指定）'}"
           f"（テーマにも{'書いた' if theme_ok else '書けなかった'}）\n")
     print("| # | ファイル | 種別 | 注意 |")

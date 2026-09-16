@@ -518,6 +518,23 @@ def add_shape(slide, el, style, rules, inherit, base_dir: Path, warn):
         add_table(slide, tbl, style, rules, inherit, x, y, cx, h, warn)
         return
 
+    # **図は入れ子にあることが多い。**表と同じく、中から拾う。
+    # 実案件の HTML は本文枠（body-area）の中に図を置く作りで、
+    # 直下しか見ていなかったため**グラフが1つも入らず、警告も出なかった**
+    if el.tag not in ("svg", "canvas") and not el.get("data-chart"):
+        fig = next(iter(el.xpath(".//*[@data-chart]")), None)
+        if fig is not None:
+            fst = computed(fig, rules, inherit)
+            fl, ft = px(fst.get("left")), px(fst.get("top"))
+            fw, fh = px(fst.get("width")), px(fst.get("height"))
+            # 図自身に座標が無ければ、外側の枠の場所を使う
+            fx = Emu(int((left if fl is None else fl) * EMU_PER_PX))
+            fy = Emu(int((top if ft is None else ft) * EMU_PER_PX))
+            fcx = Emu(int((w if fw is None else fw) * EMU_PER_PX))
+            fcy = Emu(int(((h or w) if fh is None else fh) * EMU_PER_PX))
+            if add_chart(slide, fig, fx, fy, fcx, fcy, warn):
+                return
+
     # svg の扱いは**中身で分かれる。**
     #
     #   数値を表すグラフ → 写さない。**絵から元の数字は戻せない。**
@@ -1047,8 +1064,22 @@ def build_slide(prs, doc, base_dir: Path, warn, relayout=False):
     sw, sh = slide_size_px(doc)
     for root in slides:
         made = prs.slides.add_slide(prs.slide_layouts[6])   # 白紙
-        items = [(el, computed(el, rules, inherit))
-                 for el in root.iterchildren() if isinstance(el.tag, str)]
+        items = []
+        for el in root.iterchildren():
+            if not isinstance(el.tag, str):
+                continue
+            st = computed(el, rules, inherit)
+            # **本文枠は入れ物であって、図形ではない。**
+            # 中に座標を持つ子が複数あるなら、その子ごとに置く。
+            # まとめて1つの枠にすると、表と図が同居したときに
+            # **表だけが拾われて図が落ちる**（実案件で起きた）
+            kids = [(k, computed(k, rules, inheritable(st)))
+                    for k in el.iterchildren() if isinstance(k.tag, str)]
+            placed = [(k, ks) for k, ks in kids if px(ks.get("left")) is not None]
+            if len(placed) >= 2 and not (el.text or "").strip():
+                items += placed
+            else:
+                items.append((el, st))
         if relayout:
             # **座標を写さず、行に束ねて敷き直す。**
             # 写した座標は、PowerPoint が枠を縦に伸ばしたぶんだけ重なる

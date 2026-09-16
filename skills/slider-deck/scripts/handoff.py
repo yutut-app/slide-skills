@@ -63,6 +63,7 @@ def skill_version() -> str:
             return r.stdout.strip()
     except (OSError, subprocess.SubprocessError):
         pass
+    # スキル直下 → その上 と順に見る。**スキルだけ配られることがある**
     for base in (HERE.parent, HERE.parent.parent, HERE.parent.parent.parent):
         f = base / "VERSION"
         if f.exists():

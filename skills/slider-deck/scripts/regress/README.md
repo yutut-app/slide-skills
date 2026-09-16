@@ -73,6 +73,21 @@ python3 scripts/html2pptx.py scripts/regress/07_relayout_and_boxchart.html -o /t
 python3 scripts/fit_check.py check /tmp/f07.pptx   # 指摘 0 件
 ```
 
+## 08 — 本文枠の中の図と表
+
+**実案件の HTML は、図も表も本文枠（`body-area`）の中に置く。**
+
+| 見るところ | 期待 | 壊れると |
+|---|---|---|
+| グラフ | **1件入る** | 直下しか見ないと、**図が1つも入らず警告も出ない** |
+| 表 | 1件入る | 表だけ拾って図を落とす（同じ枠に両方あるとき） |
+| 高さの無い枠がある枚 | **位置を写し、その旨を出す** | 動かした枠と動かせない枠が重なる |
+
+```bash
+python3 scripts/html2pptx.py scripts/regress/08_nested_chart_and_table.html -o /tmp/f08.pptx
+# 「グラフにした」「表を…ネイティブの表に」「整列: 高さの書かれていない枠」の3行が出る
+```
+
 ---
 
 ## 不具合を直したら、ここに見本を足す ★

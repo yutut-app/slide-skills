@@ -39,19 +39,29 @@ def _box(style):
             _f(style, "width"), _f(style, "height"))
 
 
-def is_pinned(el, style, slide_w, slide_h):
-    """動かさない枠か。**器（ロゴ・帯）は動かしても得が無い。**"""
+def pin_reason(el, style, slide_w, slide_h):
+    """動かさない理由。動かしてよいなら None。
+
+    **「器だから動かさない」と「寸法が読めないから動かせない」は別物。**
+    前者は混ぜても安全だが、**後者が混ざると、動かした枠と重なる**
+    （実案件で、動かしたリード帯が、動かせない表に重なった）。
+    """
     if el.get("data-pin") is not None:
-        return True
+        return "指定"
     if el.tag == "img" or el.xpath(".//img"):
-        return True
+        return "画像"
     left, top, w, h = _box(style)
     if top is None or h is None:
-        return True                       # 寸法が読めないものは触らない
+        return "寸法不明"
     if h <= slide_h * BAND_RATIO and (top <= EDGE_PX
                                       or top + h >= slide_h - EDGE_PX):
-        return True
-    return False
+        return "帯"
+    return None
+
+
+def is_pinned(el, style, slide_w, slide_h):
+    """動かさない枠か。**器（ロゴ・帯）は動かしても得が無い。**"""
+    return pin_reason(el, style, slide_w, slide_h) is not None
 
 
 def _rows(items):
@@ -100,6 +110,20 @@ def relayout(items, slide_w, slide_h, warn=None):
     縮めると字が読めなくなり、直すべき箇所が見えなくなる。
     """
     warn = warn if warn is not None else []
+
+    # **高さの書かれていない枠が1つでもあれば、この枚は組み直さない。**
+    # 動かす枠と動かさない枠が混ざると、互いに重なる
+    # （実案件で、動かした帯と、動かさなかった表が重なった）。
+    # 中身から高さを当てるのは推測になるので、**写したうえで報告する。**
+    unknown = [el for el, st in items
+               if pin_reason(el, st, slide_w, slide_h) == "寸法不明"]
+    if unknown:
+        warn.append(
+            f"整列: 高さの書かれていない枠が {len(unknown)} 件あるので、"
+            "**この枚は位置を写した。**"
+            "組み直すには、配布元に height を書いてもらう")
+        return 0, len(items)
+
     pinned, flow = [], []
     for el, st in items:
         (pinned if is_pinned(el, st, slide_w, slide_h) else flow).append((el, st))
@@ -156,10 +180,16 @@ def relayout(items, slide_w, slide_h, warn=None):
                     "**文字量を減らすか、枚を分ける。**枠は縮めていない")
         scale = 1.0
 
-    # 余りは行に配る。**上に寄せて下を空けない。**空きが偏ると寂しく見える
-    extra = (avail_h - need_h) / len(rows) if avail_h > need_h else 0.0
+    # **余りで枠を伸ばさない。**枠を伸ばすと、中の表の行が一緒に育ち、
+    # スライドの外へ出る（実案件で表が下にはみ出した）。
+    # 余りは**行の間の余白**に配る。中身の大きさは変えない
+    # **余りで枠も余白も広げない。**広げると、表紙のように行が多い枚で
+    # 下の行がスライドの外へ出る（実際に出た）。余りは上下に振り分け、
+    # **かたまりを真ん中に寄せる。**
+    extra = 0.0
+    slack = max(0.0, avail_h - need_h) / 2
 
-    y = top_edge + gy
+    y = top_edge + gy + slack
     moved = 0
     for row, h in zip(rows, heights):
         rh = h * scale + extra
