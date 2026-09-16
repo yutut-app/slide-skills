@@ -176,9 +176,11 @@ def relayout(items, slide_w, slide_h, warn=None):
         avail_h = _avail(gy)
     scale = avail_h / need_h if need_h > avail_h else 1.0
     if scale < 1.0:
-        warn.append(f"整列: 中身が縦に {need_h - avail_h:.0f}px 入りきらない。"
-                    "**文字量を減らすか、枚を分ける。**枠は縮めていない")
-        scale = 1.0
+        # **入りきらないものを並べ直すと、下の枠がフッターに重なる。**
+        # 組み直さずに写し、入りきらないことを報告する
+        warn.append(f"整列: 中身が縦に {need_h - avail_h:.0f}px 入りきらないので、"
+                    "**この枚は位置を写した。**文字量を減らすか、枚を分ける")
+        return 0, len(items)
 
     # **余りで枠を伸ばさない。**枠を伸ばすと、中の表の行が一緒に育ち、
     # スライドの外へ出る（実案件で表が下にはみ出した）。
@@ -194,6 +196,23 @@ def relayout(items, slide_w, slide_h, warn=None):
     for row, h in zip(rows, heights):
         rh = h * scale + extra
         widths = [(_f(s, "width", 0.0) or 0.0) for _, s in row]
+
+        # **横に重なっているものは、横並びではなく「重ね置き」。**
+        # 幅を割ると、帯の上に白文字を重ねた意匠が壊れる
+        # （実案件で、帯が半分になり、白い文字が帯の外に出て消えた）。
+        # そういう行は**左右に触らず、縦だけ動かす。**
+        layered = any(
+            (_f(a[1], "left", 0.0) < _f(b[1], "left", 0.0) + (_f(b[1], "width", 0.0) or 0.0)
+             and _f(b[1], "left", 0.0) < _f(a[1], "left", 0.0) + (_f(a[1], "width", 0.0) or 0.0))
+            for i, a in enumerate(row) for b in row[i + 1:])
+        if layered:
+            base = min(_f(s, "top", 0.0) for _, s in row)
+            for el, st in row:
+                st["top"] = f"{y + (_f(st, 'top', 0.0) - base):.1f}px"
+            y += rh + gy
+            moved += len(row)
+            continue
+
         gx = _clamp(_median(
             [(_f(b[1], "left", 0.0) - (_f(a[1], "left", 0.0)
                                        + (_f(a[1], "width", 0.0) or 0.0)))

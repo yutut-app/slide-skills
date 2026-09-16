@@ -54,6 +54,8 @@ def main():
     ap = argparse.ArgumentParser(description="段階0: 1枚でテンプレートのずれを潰す")
     ap.add_argument("html", help="テンプレートの1枚（本文ページが向く。例: 003.html）")
     ap.add_argument("-o", "--out", default="work/stage0", help="出力先")
+    ap.add_argument("--slide", type=int, default=1,
+                    help="何枚目を見るか（既定 1）。**本文ページが向く**")
     args = ap.parse_args()
 
     src = Path(args.html)
@@ -61,6 +63,25 @@ def main():
         sys.exit(f"見つからない: {src}")
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
+
+    # **1枚だけにする。**受け取る deck.html は `.slide` を何枚も持つので、
+    # そのまま渡すと全部変換され、「1枚で当たりを取る」意味が消える
+    # （実案件の 18 枚入りを渡したところ、18 枚とも変換された）。
+    import lxml.html as LH
+    doc = LH.parse(str(src)).getroot()
+    sls = doc.xpath(
+        "//*[contains(concat(' ', normalize-space(@class), ' '), ' slide ')]")
+    if len(sls) > 1:
+        keep = sls[min(args.slide, len(sls)) - 1]
+        for other in sls:
+            if other is not keep:
+                other.getparent().remove(other)
+        # **元の HTML と同じ場所に書く。**別の場所に書くと
+        # `images/logo.png` のような相対の参照が切れ、ロゴが落ちる
+        one = src.parent / f"{src.stem}_1枚.html"
+        one.write_bytes(LH.tostring(doc, encoding="utf-8"))
+        print(f"**{len(sls)} 枚のうち {args.slide} 枚目だけを見る。** → {one.name}\n")
+        src = one
     pptx = out / f"{src.stem}_stage0.pptx"
 
     print(f"# 段階0 — {src}\n")

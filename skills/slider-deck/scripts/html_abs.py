@@ -41,6 +41,40 @@ PX_PER_PT = 4 / 3          # 1pt = 1.3333px（既定。テンプレートによ�
 EMU_PER_PT = 12700
 
 
+def template_manifests(files):
+    """手元のテンプレート置き場にある `template-manifest.md` を集める。
+
+    探す順は **環境変数 → HTML の上の階層 → 作業ディレクトリ**。
+    README には「別の場所に置くなら `SLIDE_TEMPLATE_DIR` を向ける」と
+    書いてあったが、**このスキルには探す仕組みが無かった。**
+    書いてあるだけの決まりは守られない。
+    """
+    import os
+
+    roots = []
+    env = os.environ.get("SLIDE_TEMPLATE_DIR")
+    if env:
+        roots.append(Path(env))
+    bases = [Path(f).resolve().parent for f in files] + [Path.cwd().resolve()]
+    for b in bases:
+        for up in [b] + list(b.parents)[:4]:
+            roots.append(up / "assets" / "templates" / "deck")
+    found, seen = [], set()
+    for r in roots:
+        if not r.is_dir():
+            continue
+        for man in sorted(r.glob("*/template-manifest.md")):
+            key = man.resolve()
+            if key not in seen:
+                seen.add(key)
+                found.append(man)
+        direct = r / "template-manifest.md"
+        if direct.exists() and direct.resolve() not in seen:
+            seen.add(direct.resolve())
+            found.append(direct)
+    return found
+
+
 def px_per_pt_of(files, override=None):
     """px→pt の換算係数を決める。
 
@@ -72,6 +106,20 @@ def px_per_pt_of(files, override=None):
         m = re.search(r'<meta\s+name="px-per-pt"\s+content="([\d.]+)"', head)
         if m:
             return float(m.group(1)), f"{Path(f).name} の meta"
+
+    # **手元のテンプレートを見に行く。**
+    # 受け取った HTML と同じ場所にマニフェストは無い（テンプレートは別置き）。
+    # 探さないと既定の 96dpi に落ち、テンプレートによっては寸法が狂う
+    # （A4 は 1pt = 1.641px。実測で 780×540pt が 960×664pt になった）。
+    mans = template_manifests(files)
+    if len(mans) == 1:
+        m = re.search(r"1\s*pt\s*=\s*([\d.]+)\s*px", mans[0].read_text())
+        if m:
+            return float(m.group(1)), f"手元のテンプレ {mans[0].parent.name}"
+    elif len(mans) > 1:
+        print("**手元にテンプレートが複数あり、どれか決められない**"
+              f"（{'・'.join(sorted(x.parent.name for x in mans))}）。"
+              "`--px-per-pt` で渡すか、HTML に meta を書く", file=sys.stderr)
     return 4 / 3, "既定（96dpi）"
 
 
@@ -522,18 +570,35 @@ def add_shape(slide, el, style, rules, inherit, base_dir: Path, warn):
     # 実案件の HTML は本文枠（body-area）の中に図を置く作りで、
     # 直下しか見ていなかったため**グラフが1つも入らず、警告も出なかった**
     if el.tag not in ("svg", "canvas") and not el.get("data-chart"):
-        fig = next(iter(el.xpath(".//*[@data-chart]")), None)
-        if fig is not None:
+        # 数のあるグラフ → ネイティブのグラフ、線の図 → コネクタ。
+        # **どちらも入れ子にある。**実案件では 144 個の作図 svg のうち
+        # 直下にあった1個しか変換されず、**143 個が黙って落ちた**
+        figs = el.xpath(".//*[@data-chart]") + el.xpath(".//svg")
+        for fig in figs:
             fst = computed(fig, rules, inherit)
             fl, ft = px(fst.get("left")), px(fst.get("top"))
             fw, fh = px(fst.get("width")), px(fst.get("height"))
-            # 図自身に座標が無ければ、外側の枠の場所を使う
-            fx = Emu(int((left if fl is None else fl) * EMU_PER_PX))
-            fy = Emu(int((top if ft is None else ft) * EMU_PER_PX))
-            fcx = Emu(int((w if fw is None else fw) * EMU_PER_PX))
-            fcy = Emu(int(((h or w) if fh is None else fh) * EMU_PER_PX))
-            if add_chart(slide, fig, fx, fy, fcx, fcy, warn):
-                return
+            if fw is None and (fig.get("width") or "").replace(".", "").isdigit():
+                fw = float(fig.get("width"))
+            if fh is None and (fig.get("height") or "").replace(".", "").isdigit():
+                fh = float(fig.get("height"))
+            fx = left if fl is None else fl
+            fy = top if ft is None else ft
+            fwidth = w if fw is None else fw
+            fheight = (h or w) if fh is None else fh
+            if fig.get("data-chart"):
+                if add_chart(slide, fig,
+                             Emu(int(fx * EMU_PER_PX)), Emu(int(fy * EMU_PER_PX)),
+                             Emu(int(fwidth * EMU_PER_PX)),
+                             Emu(int(fheight * EMU_PER_PX)), warn):
+                    continue
+            try:
+                n = draw_svg_lines(slide, fig, fx, fy, fwidth, fheight)
+                if n:
+                    warn.append(f"入れ子の svg の線 {n} 本をコネクタにした")
+            except SvgOutside as ex:
+                warn.append(f"**入れ子の svg の線がスライドの外へ出た（{ex}）。**"
+                            "枠の寸法と `viewBox` が噛み合っていない")
 
     # svg の扱いは**中身で分かれる。**
     #
