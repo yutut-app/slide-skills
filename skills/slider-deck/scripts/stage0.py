@@ -51,7 +51,7 @@ def run(cmd, quiet=False):
 
 
 def main():
-    ap = argparse.ArgumentParser(description="段階0: 1枚でテンプレートのずれを潰す")
+    ap = argparse.ArgumentParser(description="段階0: 1枚でテンプレートのずれを潰す。変換の前に1枚だけ。本番の変換は html2pptx.py")
     ap.add_argument("html", help="テンプレートの1枚（本文ページが向く。例: 003.html）")
     ap.add_argument("-o", "--out", default="work/stage0", help="出力先")
     ap.add_argument("--slide", type=int, default=1,

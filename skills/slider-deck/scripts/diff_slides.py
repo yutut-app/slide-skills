@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """2つの pptx を比べ、**どのスライドが変わったかを機械的に出す。**
 
+**直した後、変えた枚を確かめるときに使う。**手で直された pptx と HTML の差は `pptx_diff_html.py`。
+
     python3 scripts/diff_slides.py <前>.pptx <後>.pptx
 
 直したスライドだけが変わっていることの証明に使う。

@@ -61,7 +61,7 @@ def ea_of(run):
 
 
 def main():
-    ap = argparse.ArgumentParser(description="pptx の中身を要約する（読むだけ）")
+    ap = argparse.ArgumentParser(description="pptx の中身を要約する（読むだけ）。絵に違和感があるのに原因が分からないときに使う")
     ap.add_argument("pptx")
     ap.add_argument("--slide", type=int, help="この枚だけ詳しく出す")
     args = ap.parse_args()

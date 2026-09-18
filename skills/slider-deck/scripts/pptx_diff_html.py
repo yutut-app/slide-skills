@@ -234,7 +234,7 @@ def compare(html_file: Path, pptx_slide, no, dflt=None, index: int = 0):
 
 def main():
     ap = argparse.ArgumentParser(
-        description="手で直した pptx と HTML テンプレートの差を出す")
+        description="手で直した pptx と HTML テンプレートの差を出す。手で直された pptx を受け取ったときに使う")
     ap.add_argument("pptx")
     ap.add_argument("html", nargs="+",
                     help="スライド順の HTML。print.html を渡すと iframe 順に展開する")

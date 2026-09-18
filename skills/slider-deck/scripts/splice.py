@@ -159,7 +159,7 @@ def replace_html(el, markup):
 
 def main():
     ap = argparse.ArgumentParser(
-        description="テンプレートの本文だけを入れ替える（共通パーツは触らない）")
+        description="テンプレートの本文だけを入れ替える（共通パーツは触らない）。枚を足すときに使う")
     ap.add_argument("template", help="元にするテンプレートの HTML")
     ap.add_argument("--content", help="差し替えの中身（JSON）")
     ap.add_argument("-o", "--out", help="出力先の HTML")

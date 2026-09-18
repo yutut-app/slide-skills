@@ -115,7 +115,7 @@ TEMPLATE = """# 引き継ぎ
 
 
 def main():
-    ap = argparse.ArgumentParser(description="引き継ぎメモの雛形を作る")
+    ap = argparse.ArgumentParser(description="引き継ぎメモの雛形を作る。始める前の版の突き合わせと、返すときのメモ")
     ap.add_argument("template", help="テンプレートのディレクトリ")
     ap.add_argument("-o", "--out", help="書き出し先。省くと標準出力")
     ap.add_argument("--fingerprint", action="store_true",

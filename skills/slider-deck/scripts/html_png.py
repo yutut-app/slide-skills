@@ -191,7 +191,7 @@ def shoot(browser, src: Path, out: Path, w: int, h: int, scale: float, profile):
 
 def main():
     ap = argparse.ArgumentParser(
-        description="HTML を1枚1枚 PNG にする（ローカルのみ。公開しない）")
+        description="HTML を1枚1枚 PNG にする（ローカルのみ。公開しない）。利用者が見ている絵を出すときに使う")
     ap.add_argument("html", nargs="*",
                     help="スライドの HTML。print.html を渡すと中の iframe 順に展開する")
     ap.add_argument("-o", "--out", default="qa_html", help="出力先ディレクトリ")

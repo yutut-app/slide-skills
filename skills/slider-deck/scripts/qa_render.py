@@ -218,7 +218,7 @@ def means():
 
 
 def main():
-    ap = argparse.ArgumentParser(description="pptx/xlsx を PNG にして目視検査する")
+    ap = argparse.ArgumentParser(description="pptx/xlsx を PNG にして目視検査する。自分の目で見るときに使う")
     ap.add_argument("files", nargs="*", help="検査する pptx / xlsx")
     ap.add_argument("-o", "--outdir", default="qa", help="出力先（既定: ./qa）")
     ap.add_argument("--probe", action="store_true",

@@ -489,7 +489,7 @@ def cmd_check(args):
 
 
 def main():
-    ap = argparse.ArgumentParser(description="レイアウトの検算")
+    ap = argparse.ArgumentParser(description="レイアウトの検算。budget は書く前、check は変換の直後")
     sub = ap.add_subparsers(dest="cmd", required=True)
 
     b = sub.add_parser("budget", help="書く前に、入る文字数と縦グリッドを出す")

@@ -329,7 +329,7 @@ def dry_run(xdir: Path, pptx: Path, g, warn):
 
 
 def main():
-    ap = argparse.ArgumentParser(description="HTML の図から Excel を作り、pptx に貼る")
+    ap = argparse.ArgumentParser(description="HTML の図から Excel を作り、pptx に貼る。Excel でグラフを作って貼るときに使う")
     ap.add_argument("src", help="HTML（既定）／--paste のときは .xlsx のあるフォルダ")
     ap.add_argument("pptx", nargs="?", help="--paste のときの貼り先")
     ap.add_argument("-o", "--outdir", default="charts", help="xlsx の出力先")

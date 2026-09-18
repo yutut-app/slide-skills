@@ -544,7 +544,7 @@ def build_absolute(files, out: Path, px_per_pt=None, relayout=False):
 
 def main():
     ap = argparse.ArgumentParser(
-        description="HTML を pptx に変換する（HTML が編集対象、pptx は派生物）")
+        description="HTML を pptx に変換する（HTML が編集対象、pptx は派生物）。本番の変換。テンプレート自体のずれは先に stage0.py で潰す")
     ap.add_argument("html", nargs="+",
                     help="スライドの HTML。複数可。print.html を渡すと中の iframe 順に並べる")
     ap.add_argument("--template", "-t", help="テンプレートの .pptx。"

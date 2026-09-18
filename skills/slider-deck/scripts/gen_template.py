@@ -85,7 +85,7 @@ def meta_factor(files):
 
 def main():
     ap = argparse.ArgumentParser(
-        description="資料の HTML から資料テンプレートを作り直す（ローカルのみ）")
+        description="資料の HTML から資料テンプレートを作り直す（ローカルのみ）。テンプレートが手元に無い機械で使うときだけ")
     ap.add_argument("html", nargs="+", help="資料の HTML。print.html でもよい")
     ap.add_argument("-o", "--out", required=True, help="テンプレートの置き場所")
     ap.add_argument("--px-per-pt", type=float,
