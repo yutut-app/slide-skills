@@ -129,6 +129,13 @@ python3 scripts/html2pptx.py scripts/regress/11_band_text_center.html -o /tmp/f1
 python3 scripts/fit_check.py check /tmp/f11.pptx   # 中心ずれ 1件・不合格 0件
 ```
 
+## 12 — 線と文字の重なり（`--keep-coords` で通す）
+
+| 見るところ | 期待 |
+|---|---|
+| 文字の真ん中を通る線 | **1件拾う**（注意欄。不合格にはしない） |
+| 文字の下を通る線 | **拾わない** |
+
 ---
 
 ## 不具合を直したら、ここに見本を足す ★

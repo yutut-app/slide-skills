@@ -256,6 +256,38 @@ def body_pt(sh, default=18.0):
     return max(sizes) if sizes else default
 
 
+def segment(shp):
+    """線（コネクタ）の端点を in で返す。取れなければ None。"""
+    try:
+        return (shp.begin_x / 914400, shp.begin_y / 914400,
+                shp.end_x / 914400, shp.end_y / 914400)
+    except (AttributeError, TypeError):
+        return None
+
+
+def crosses(r, seg) -> bool:
+    """線分が長方形の内側を通るか（Liang–Barsky）。"""
+    x, y, w, h = r
+    x1, y1, x2, y2 = seg
+    dx, dy = x2 - x1, y2 - y1
+    t0, t1 = 0.0, 1.0
+    for p, q in ((-dx, x1 - x), (dx, x + w - x1), (-dy, y1 - y), (dy, y + h - y1)):
+        if p == 0:
+            if q < 0:
+                return False
+            continue
+        t = q / p
+        if p < 0:
+            if t > t1:
+                return False
+            t0 = max(t0, t)
+        else:
+            if t < t0:
+                return False
+            t1 = min(t1, t)
+    return t0 <= t1
+
+
 def filled(shp) -> bool:
     """塗りのある図形か。**帯やカードを見分けるため。**"""
     try:
@@ -285,10 +317,14 @@ def cmd_check(args):
     n_slides, n_shapes = len(prs.slides._sldIdLst), 0
 
     for i, slide in enumerate(prs.slides, 1):
-        items = []
+        items, lines = [], []
         for shp in slide.shapes:
-            # コネクタと線は、図形に接するのが正しいので重なり判定から外す
+            # コネクタと線は、図形に接するのが正しいので重なり判定から外す。
+            # **ただし文字との重なりは別に見る**（下の「線と文字」）
             if shp.shape_type in (MSO_SHAPE_TYPE.LINE,):
+                seg = segment(shp)
+                if seg:
+                    lines.append(seg)
                 continue
             r = rect(shp)
             if not r:
@@ -343,6 +379,25 @@ def cmd_check(args):
                 findings.append((i, "溢れ",
                                  f"「{text[:14]}」が {need} 行必要だが枠は {cap} 行分"
                                  f"（{pt:.0f}pt・行間 {sp:.2f}・幅 {r[2]:.2f}in）"))
+
+        # 線が文字を横切っている（軸ラベル・矢印・凡例と数値ラベル）
+        # **意匠のこともあるので不合格にしない。**目で見る候補として出す。
+        # 実績: 矢印のずれ・月の帯と文字・ラベルと線の重なりを、機械が1つも出さず見落とした
+        for sa, ra, ta in items:
+            if not ta:
+                continue
+            tr = text_rect(sa, ra, ta, body_pt(sa))
+            if not tr:
+                continue
+            # 文字の実占有域を少し内側に取る。**端をかすめる線は拾わない**
+            x, y, w, h = tr
+            inner = (x + w * 0.08, y + h * 0.2, w * 0.84, h * 0.6)
+            for (x1, y1, x2, y2) in lines:
+                if crosses(inner, (x1, y1, x2, y2)):
+                    findings.append((i, "線と文字",
+                                     f"線が「{ta[:10]}」の文字に重なっている"
+                                     f"（({x1:.2f},{y1:.2f})→({x2:.2f},{y2:.2f})）。**目で確かめる**"))
+                    break
 
         # 帯の上の文字が、帯の中心とそろっていない
         # **意匠の話なので不合格にしない。配布元に報告するだけ。**

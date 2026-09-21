@@ -166,16 +166,30 @@ def main():
     ap.add_argument("--list", action="store_true",
                     help="差し替えられる場所と、いまの文言を出す")
     ap.add_argument("--force", action="store_true", help="出力先を上書きする")
+    ap.add_argument("--slide", type=int,
+                    help="**何枚目だけを替えるか。**1ファイルに複数の枚がある資料で使う。"
+                         "タイトル・リード帯など、全枚にある共通パーツを1枚だけ替えるとき")
     args = ap.parse_args()
 
     src = Path(args.template)
     if not src.exists():
         sys.exit(f"見つからない: {src}")
     doc = LH.parse(str(src)).getroot()
-    found = targets(doc)
+
+    # **1ファイルに複数の枚があるなら、どの枚かを決めてから触る。**
+    # 共通パーツ（タイトル・リード帯）は全枚に同じ class で入っているので、
+    # 枚を絞らずに替えると**全枚が同じ文言になる。**
+    slides = doc.xpath(
+        "//*[contains(concat(' ', normalize-space(@class), ' '), ' slide ')]")
+    scope = doc
+    if args.slide:
+        if not (1 <= args.slide <= len(slides)):
+            sys.exit(f"--slide {args.slide} が範囲外（全 {len(slides)} 枚）")
+        scope = slides[args.slide - 1]
+    found = targets(scope)
 
     if args.list:
-        items = editable(doc)
+        items = editable(scope)
         counts = {}
         for n, _ in items:
             counts[n] = counts.get(n, 0) + 1
@@ -194,6 +208,11 @@ def main():
         ap.error("--content と -o を渡す（見るだけなら --list）")
 
     content = json.loads(Path(args.content).read_text(encoding="utf-8"))
+    if len(slides) > 1 and not args.slide:
+        hit = [k for k in content if len(found.get(k, [])) > 1]
+        if hit:
+            sys.exit(f"**{len(slides)} 枚ある資料で、{'・'.join(hit)} が複数の枚にある。**\n"
+                     "このまま替えると全枚が同じ文言になる。`--slide N` で枚を指定する")
     out = Path(args.out)
     if out.exists() and not args.force:
         sys.exit(f"既にある: {out}\n  別名で出すか、置き換えるなら --force")

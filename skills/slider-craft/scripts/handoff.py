@@ -18,6 +18,10 @@ import sys
 from datetime import date
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+import checked
+
 HERE = Path(__file__).resolve().parent
 
 
@@ -43,6 +47,21 @@ def fingerprint(tpl: Path) -> str:
     return h.hexdigest()[:12]
 
 
+def source_fingerprint(files) -> str:
+    """正本（資料の HTML 一式）の指紋。**引き継ぎ一式が古くなったかを見るため。**
+
+    正本を直すたびに引き継ぎ一式は陳腐化するが、作り直すきっかけが無い。
+    実績: 引き継ぎが第3版のまま、正本だけが先へ進んでいた。
+    **メモに正本の指紋を書き、今の正本と比べれば機械的に分かる。**
+    """
+    h = hashlib.sha256()
+    for f in sorted(Path(x) for x in files):
+        h.update(f.name.encode("utf-8"))
+        h.update(b"\0")
+        h.update(f.read_bytes())
+    return h.hexdigest()[:12]
+
+
 def skill_version() -> str:
     """スキルの版。
 
@@ -59,6 +78,7 @@ def skill_version() -> str:
             return r.stdout.strip()
     except (OSError, subprocess.SubprocessError):
         pass
+    # スキル直下 → その上 と順に見る。**スキルだけ配られることがある**
     for base in (HERE.parent, HERE.parent.parent, HERE.parent.parent.parent):
         f = base / "VERSION"
         if f.exists():
@@ -72,6 +92,12 @@ TEMPLATE = """# 引き継ぎ
 渡す人 → 受け取る人: <誰> → <誰>
 **スキルの版: {version}**  ← 違えば挙動が違う。指摘が再現しないときはここを疑う
 
+**正本の指紋: {src_fp}**  ← 正本を直したら、この引き継ぎ一式は古い（`--stale` で確かめる）
+
+## このメモの役割
+**相手に渡すメモ**（受け取った人が続きから入るためのもの）。
+自分用の続きメモとは別物。**食い違ったら、こちら（渡した時点の事実）が正。**
+
 ## 今どこ
 段階: <0 / 1 / 2>
 <段階1の終了宣言が済んでいるかを書く>
@@ -81,6 +107,14 @@ TEMPLATE = """# 引き継ぎ
 スライドサイズ: {size}
 **指紋: {fp}**  ← 受け取った側は自分で計算して突き合わせる
 同梱した / 相手が持っている（どちらかを書く）
+
+## 正本を作る手順（再現の手順）
+**続きから入る人が、同じ正本を作り直せるように書く。**順番と、各段で何が変わるか。
+**正本を上書きするスクリプトは、必ずその旨を書く。**黙って上書きされると、
+直した内容が消えても気づけない。
+| 順 | コマンド | 何が変わるか | 正本を上書きするか |
+|---|---|---|---|
+| 1 | <コマンド> | <出力> | する / しない |
 
 ## 直近で直したこと
 | スライド | 直したこと |
@@ -110,19 +144,74 @@ TEMPLATE = """# 引き継ぎ
 
 
 def main():
-    ap = argparse.ArgumentParser(description="引き継ぎメモの雛形を作る")
+    ap = argparse.ArgumentParser(description="引き継ぎメモの雛形を作る。始める前の版の突き合わせと、返すときのメモ")
     ap.add_argument("template", help="テンプレートのディレクトリ")
     ap.add_argument("-o", "--out", help="書き出し先。省くと標準出力")
     ap.add_argument("--fingerprint", action="store_true",
                     help="指紋と版だけ出す。相手と突き合わせるときに使う")
+    ap.add_argument("--expect",
+                    help="**引き継ぎメモに書かれた指紋。**"
+                         "手元のテンプレートと違えば異常終了する（終了コード 1）")
+    ap.add_argument("--source", nargs="+",
+                    help="正本（資料の HTML 一式）。メモに正本の指紋を書く／`--stale` で比べる")
+    ap.add_argument("--stale",
+                    help="**引き継ぎメモ（HANDOFF.md）。**書かれた正本の指紋と今の正本を比べ、"
+                         "違えば「引き継ぎ一式は古い」と異常終了する。`--source` と一緒に使う")
     args = ap.parse_args()
+
+    if args.stale:
+        # **正本を直したら、引き継ぎ一式は古い。**機械で出す
+        import re as _re
+        if not args.source:
+            sys.exit("--stale には --source（今の正本）が要る")
+        memo = Path(args.stale).read_text(encoding="utf-8")
+        m = _re.search(r"正本の指紋:\s*\**\s*([0-9a-f]{12})", memo)
+        if not m:
+            print("**メモに正本の指紋が無い。**古いかどうか判定できない。"
+                  "`--source` を付けてメモを作り直す")
+            return checked.summary("handoff --stale", 0, "件", 0,
+                                   {"メモ": args.stale})
+        want, got = m.group(1), source_fingerprint(args.source)
+        ok = want == got
+        print(f"メモの正本の指紋 {want} / 今の正本 {got}")
+        print("**一致。**引き継ぎ一式は今の正本と同じ" if ok else
+              "\n**引き継ぎ一式は古い。**正本がメモを書いた後に変わっている。"
+              "\n渡す前に作り直す（HTML・md・メモを今の正本から書き出し直す）")
+        code = checked.summary("handoff --stale", 1, "件", 0 if ok else 1,
+                               {"メモ": want, "正本": got})
+        return code or (0 if ok else 1)
 
     tpl = Path(args.template)
     if not tpl.is_dir():
         sys.exit(f"ディレクトリではない: {tpl}")
 
+    got = fingerprint(tpl)
+
+    if args.expect:
+        # **規約に「突き合わせる」と書くだけでは守られない。**機械で止める。
+        # 違う版で出しても、変換も検査も最後まで走りきってしまう
+        want = args.expect.strip()
+        ok = got == want
+        print(f"{tpl.name}  指紋 {got}  引き継ぎメモ {want}")
+        if ok:
+            print("**一致した。**そのまま進めてよい")
+        else:
+            print("\n**指紋が違う。このまま変換しない。**")
+            print("| | |")
+            print("|---|---|")
+            print(f"| 手元のテンプレート | {got} |")
+            print(f"| 受け取った資料が前提にしている版 | {want} |")
+            print("\n**名前が同じでも中身が違う。**どちらが新しいかを確かめる。")
+            print("受け取った HTML のほうが新しいなら、"
+                  "`gen_template.py` で作り直してから変換する。")
+        code = checked.summary("handoff --expect", 1, "件", 0 if ok else 1,
+                               {"手元": got, "メモ": want})
+        # **不一致は異常終了させる。**サマリ行は「見た」ことしか示さない。
+        # 終了コードで落とさないと、後続の変換がそのまま走る
+        return code or (0 if ok else 1)
+
     if args.fingerprint:
-        print(f"{tpl.name}  指紋 {fingerprint(tpl)}  スキルの版 {skill_version()}")
+        print(f"{tpl.name}  指紋 {got}  スキルの版 {skill_version()}")
         print("**両方が一致して初めて「同じ」。** 違えば新しい方に揃える")
         return 0
 
@@ -135,7 +224,9 @@ def main():
                 break
 
     text = TEMPLATE.format(today=date.today().isoformat(), version=skill_version(),
-                           name=tpl.name, size=size, fp=fingerprint(tpl))
+                           name=tpl.name, size=size, fp=fingerprint(tpl),
+                           src_fp=(source_fingerprint(args.source) if args.source
+                                   else "<--source で正本を渡すと入る>"))
     if args.out:
         p = Path(args.out)
         if p.exists():

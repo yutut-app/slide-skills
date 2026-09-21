@@ -221,7 +221,12 @@ def main():
     with tempfile.TemporaryDirectory(prefix="html_png-") as profile:
         for i, f in enumerate(files, 1):
             w, h = size_of(f)
-            png = outdir / f"{i:02d}_{f.stem}.png"
+            # **出力名は入力ファイル名にそろえる**（p05.html → p05.png）。
+            # 引数の順番の連番にすると、渡すファイルが変わるたびに同じ名前が
+            # 別の枚を指し、**古い PNG を新しいものと読み違える**（実際に起きた）
+            png = outdir / f"{f.stem}.png"
+            if png.exists():
+                png.unlink()       # 前回の絵を残さない。残ると失敗しても古い絵を見る
             size, err = shoot(browser, f, png, w, h, args.scale, profile)
             if err:
                 ng += 1

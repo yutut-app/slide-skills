@@ -191,7 +191,7 @@ def shoot(browser, src: Path, out: Path, w: int, h: int, scale: float, profile):
 
 def main():
     ap = argparse.ArgumentParser(
-        description="HTML を1枚1枚 PNG にする（ローカルのみ。公開しない）")
+        description="HTML を1枚1枚 PNG にする（ローカルのみ。公開しない）。利用者が見ている絵を出すときに使う")
     ap.add_argument("html", nargs="*",
                     help="スライドの HTML。print.html を渡すと中の iframe 順に展開する")
     ap.add_argument("-o", "--out", default="qa_html", help="出力先ディレクトリ")
@@ -221,7 +221,12 @@ def main():
     with tempfile.TemporaryDirectory(prefix="html_png-") as profile:
         for i, f in enumerate(files, 1):
             w, h = size_of(f)
-            png = outdir / f"{i:02d}_{f.stem}.png"
+            # **出力名は入力ファイル名にそろえる**（p05.html → p05.png）。
+            # 引数の順番の連番にすると、渡すファイルが変わるたびに同じ名前が
+            # 別の枚を指し、**古い PNG を新しいものと読み違える**（実際に起きた）
+            png = outdir / f"{f.stem}.png"
+            if png.exists():
+                png.unlink()       # 前回の絵を残さない。残ると失敗しても古い絵を見る
             size, err = shoot(browser, f, png, w, h, args.scale, profile)
             if err:
                 ng += 1
