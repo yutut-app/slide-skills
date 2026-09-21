@@ -94,6 +94,9 @@ TEMPLATE = """# 引き継ぎ
 
 **正本の指紋: {src_fp}**  ← 正本を直したら、この引き継ぎ一式は古い（`--stale` で確かめる）
 
+---
+# 現在の状態（書き換える）
+
 ## このメモの役割
 **相手に渡すメモ**（受け取った人が続きから入るためのもの）。
 自分用の続きメモとは別物。**食い違ったら、こちら（渡した時点の事実）が正。**
@@ -140,6 +143,17 @@ TEMPLATE = """# 引き継ぎ
 
 ## 触っていないもの
 スライド <番号を列挙>
+
+## 同梱した台帳
+**用語台帳（terms.md）と数値台帳（numbers.md）も渡す。**受け取った側が同じ語・同じ数字で直せる。
+- terms.md / numbers.md（無ければ、渡す前に作る）
+
+---
+# 履歴（追記する。消さない）
+続きから入る人は、上の「現在の状態」だけ読めばよい。
+| 日付 | 版 | したこと |
+|---|---|---|
+| {today} | rev<n> | <内容> |
 """
 
 
@@ -157,7 +171,27 @@ def main():
     ap.add_argument("--stale",
                     help="**引き継ぎメモ（HANDOFF.md）。**書かれた正本の指紋と今の正本を比べ、"
                          "違えば「引き継ぎ一式は古い」と異常終了する。`--source` と一緒に使う")
+    ap.add_argument("--snapshot", action="store_true",
+                    help="**版を上げる前に、今の正本を退避する。**"
+                         "snapshots/<日付>_<正本の指紋>/ に写す。`--source` と一緒に使う")
     args = ap.parse_args()
+
+    if args.snapshot:
+        # **正本が消えたときに、作り直しに頼らない**
+        import shutil
+        if not args.source:
+            sys.exit("--snapshot には --source（今の正本）が要る")
+        fp = source_fingerprint(args.source)
+        dest = Path("snapshots") / f"{date.today().isoformat()}_{fp}"
+        if dest.exists():
+            print(f"既に退避済み: {dest}（正本は前回の退避から変わっていない）")
+            return 0
+        dest.mkdir(parents=True)
+        for f in args.source:
+            shutil.copy2(f, dest / Path(f).name)
+        print(f"退避した: {dest}/（{len(args.source)} ファイル）")
+        return checked.summary("handoff --snapshot", len(args.source), "ファイル", 0,
+                               {"退避先": str(dest)})
 
     if args.stale:
         # **正本を直したら、引き継ぎ一式は古い。**機械で出す

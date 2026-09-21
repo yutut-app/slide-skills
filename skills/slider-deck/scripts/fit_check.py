@@ -314,6 +314,7 @@ def cmd_check(args):
     sh_ = prs.slide_height / EMU_PER_INCH
     findings = []
     gaps = {}   # 同じ位置の隙間をまとめる（枠の位置と大きさで引く）
+    parts = {}  # 共通パーツ（画像）との重なり。同じ位置のものをまとめる
     n_slides, n_shapes = len(prs.slides._sldIdLst), 0
 
     for i, slide in enumerate(prs.slides, 1):
@@ -379,6 +380,23 @@ def cmd_check(args):
                 findings.append((i, "溢れ",
                                  f"「{text[:14]}」が {need} 行必要だが枠は {cap} 行分"
                                  f"（{pt:.0f}pt・行間 {sp:.2f}・幅 {r[2]:.2f}in）"))
+
+        # 文字が共通パーツ（ロゴなどの画像）に重なっている
+        # **ロゴは画像なので、文字どうしの重なり判定には入らない。**タイトルがロゴに
+        # かぶっても、はみ出し検査からも漏れていた。**同じ位置で全枚に出るものはまとめる**
+        pics = [rect(sh) for sh in slide.shapes
+                if sh.shape_type == MSO_SHAPE_TYPE.PICTURE and rect(sh)]
+        for sa, ra, ta in items:
+            if not ta:
+                continue
+            tr = text_rect(sa, ra, ta, body_pt(sa))
+            if not tr:
+                continue
+            for pr in pics:
+                if overlap_area(tr, pr) > 0.02:
+                    sig = (round(tr[0], 1), round(tr[1], 1), round(pr[0], 1), round(pr[1], 1))
+                    parts.setdefault(sig, []).append((i, ta[:10]))
+                    break
 
         # 線が文字を横切っている（軸ラベル・矢印・凡例と数値ラベル）
         # **意匠のこともあるので不合格にしない。**目で見る候補として出す。
@@ -451,6 +469,18 @@ def cmd_check(args):
                    round(x2, 2), round(w2, 2), round(gap, 2))
             gaps.setdefault(sig, []).append(
                 (i, f"「{t1[:10]}」と「{t2[:10]}」", gap))
+
+    for sig, hits in parts.items():
+        slides_ = sorted({h[0] for h in hits})
+        if len(slides_) >= 3:
+            findings.append((slides_[0], "共通パーツ",
+                             f"「{hits[0][1]}」がロゴなどの画像に重なっている"
+                             f"（**{len(slides_)}枚で同じ位置**: {slides_[0]}〜{slides_[-1]}枚目）。"
+                             "**テンプレートの配置。配布元の担当**"))
+        else:
+            for i_, t in hits:
+                findings.append((i_, "共通パーツ",
+                                 f"「{t}」がロゴなどの画像に重なっている。**目で確かめる**"))
 
     # **同じ場所のものは1件にまとめる。**枚数を添えて、どこの話か分かるようにする
     for sig, hits in sorted(gaps.items(), key=lambda kv: -len(kv[1])):
