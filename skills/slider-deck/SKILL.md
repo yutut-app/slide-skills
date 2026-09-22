@@ -139,14 +139,12 @@ HTML に書けないものなので、pptx 側で作る。
 
 | ファイル | 内容 | 読むタイミング |
 |---|---|---|
-| `references/50_build.md` | 出力の手順。公式への委譲、プレビュー | **手順2の前に必ず** |
 | `references/05_receive.md` | テンプレートを作り直すとき・HTML が会話に貼られたとき | **該当するとき必ず** |
 | `references/52_charts.md` | **グラフを Excel で作って貼る**。数の出どころ・貼り付け | **グラフを入れる枚があるとき必ず** |
 | `references/55_revise.md` | **再生成と差分修正の切り替え**。上書き禁止、差分の報告 | **手順4で必ず** |
 | `references/60_qa.md` | 見た目と文章の検査。画像化、報告の形 | **手順3（必ず）** |
 | `scripts/html2pptx.py` | **HTML を pptx に変換する**（`--px-per-pt` で係数を上書き） | 手順2（毎回） |
 | `scripts/html_png.py` | **HTML を1枚1枚 PNG にする**（Chrome / Edge。ローカルのみ） | **手順3（必ず）** |
-| `scripts/splice.py` | テンプレートの本文だけを入れ替える（枚を足すとき） | 枚を足すとき |
 | `scripts/html_abs.py` | px 絶対座標の HTML を読む部分。html2pptx から呼ばれる | 直接は使わない |
 | `scripts/stage0.py` | **段階0を1コマンドで通す**（HTML絵＋pptx絵＋検査） | **段階0（必ず）** |
 | `scripts/fit_check.py` | **レイアウトの検算**。`budget`＝書く前の予算 / `check`＝作った後の重なり検出 | **手順3で必ず** |
@@ -175,7 +173,6 @@ HTML に書けないものなので、pptx 側で作る。
 | `gen_template.py` | HTML | **テンプレートが手元に無い機械**で使うとき | `template-manifest.md` と `images/` |
 | `chart_xlsx.py` | HTML／`.xlsx` のフォルダ | **Excel でグラフを作って貼る**とき | .xlsx 群、貼り付け |
 | `html_png.py` | HTML | **利用者が見ている絵**を出すとき | HTML の PNG |
-| `splice.py` | テンプレートの HTML | **枚を足す**とき（本文だけ入れ替え） | 差し替えた HTML |
 | `fit_check.py check` | pptx | **変換の直後。**機械で出る欠陥を拾う | 不合格／注意の表 |
 | `qa_render.py` | pptx | **自分の目で見る**とき | 1枚ずつの PNG |
 | `probe_pptx.py` | pptx | **絵に違和感があるのに原因が分からない**とき | 書体・自動拡張・表の余白 |
@@ -328,7 +325,9 @@ python3 scripts/html2pptx.py deck/deck.html -o deck/deck_rev1.pptx
 **入りきらないときは縮めない。**「縦に n px 入りきらない」と報告する。
 字を小さくして収めると、読めない資料が「合格」になる。
 
-`references/50_build.md` を読んでから実行する。
+**出力の決まり。**利用者から受け取ったファイルは上書きせず、必ず別名で出す。
+ファイル名に日付か版を入れる（`deck/deck_rev<n>.pptx`）。出力先は `deck/` に統一する（単数・複数を混ぜない）。
+**案内するパスは、実行前に実在を確かめる**（導入形態でパスが変わる）。
 
 ```bash
 python3 scripts/html2pptx.py <作業>/print.html -o deck/deck_rev<n>.pptx

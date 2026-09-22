@@ -90,6 +90,7 @@ metadata:
 | `references/45_layout.md` | **レイアウトの検算**。縦グリッド、入る文字数、入らないときの4択 | **手順3で文言を書く前に必ず** |
 | `scripts/ledger_check.py` | **台帳で照合する**（古い語・以前の値が0件か／MLの型／修正の経緯の印） | **手順5の関所と、直した後に必ず** |
 | `references/05_official_pptx.md` | **公式 pptx スキルとの線引き**（技術は委譲、思想は使わない） | **最初に1度必ず** |
+| `references/50_build.md` | 生成経路（テンプレートの形式ごと）、図の元ファイルの別添、出力先の決まり | テンプレートの形式が分かったとき |
 | `references/47_terms.md` | **用語台帳。**同じものを指す語を1つに決める | **手順2で作る** |
 | `references/46_numbers.md` | **数値の検算と連鎖**。1つ変えると何枚に波及するか。台帳の作り方 | **数値を載せるとき／変えるとき必ず** |
 | `references/48_html.md` | **HTML を編集対象にする往復**。2つの入り口、効かないこと | **HTML から始める／HTML を受け取ったとき必ず** |
@@ -339,7 +340,7 @@ python3 scripts/ledger_check.py work/*.html --terms terms.md --numbers numbers.m
 
 ### 6. 絵を見せて、指摘を HTML に反映する
 
-**同じ指摘が2回来たら、その枚だけでなく全枚を照合する**（`<slider-deck>/references/55_revise.md` 3-4）。
+**同じ指摘が2回来たら全枚を照合する。枚を入れ替えたら新旧の番号対応表を出す**（`48_html.md` 3-3）。
 **本文の差し替えは `splice.py`、直した後は `ledger_check.py`**（`48_html.md` 3-3）。
 
 **利用者に見せるのは HTML。** 見せ方の既定は**利用者だけが開ける Artifact**。
