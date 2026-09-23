@@ -53,3 +53,15 @@ python3 scripts/ledger_check.py work/*.html --terms terms.md --numbers numbers.m
 ```
 
 **0件でなければ報告しない。**残っている枚と語が一覧で出る。
+
+## 話さない言い回しの台帳を共有する
+
+**作り手の工夫・自己評価・権限を超える言い方・誇張・立場の語は、資料でも台本でも同じ。**
+一覧は `skills/slider-script/assets/phrases.md` に1つだけ置く。
+**ここに同じ表を作らない。**片方だけ更新されて食い違う。
+
+```bash
+python3 scripts/ledger_check.py work/*.html --terms ../slider-script/assets/phrases.md
+```
+
+案件固有の語は、その台帳をコピーして案件側に置き、コピーの方を渡す。
