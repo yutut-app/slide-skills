@@ -13,6 +13,9 @@
 | 1枚1メッセージ | **「伝えること」が1文でない**（2つ以上を1枚で言おうとしている） |
 | 台本にしか無い数字 | **スライドにも数値台帳にも無い数値が台本に出ている** |
 | 話さない言い回し | 作り手の工夫・自己評価・作り手の作法・権限を超える言い方・誇張・立場の語 |
+| つなぎ | **前の枚の語を受けていない**（「結果です」だけで、前の枚の出力を継いでいない） |
+| 1文1行 | 1行に2文以上ある。**読むときに息継ぎの位置が分からない** |
+| 単位のない数値 | 数値に単位が付いていない（**要確認**。枚番号や年は単位が無くてよい） |
 | 定義前の用語 | 用語台帳があるとき、定義より前に出てくる語（**要確認。落とさない**） |
 
 **指摘が1件でもあれば異常終了する**（終了コード 1）。直してから報告する。
@@ -27,8 +30,13 @@
 **話さない枚**（配布のみ・付録）は、本文に `**話さない**` と書く。
 欄の必須と尺の集計から外れる。**空欄のまま置かない。**
 
-**話す速さは1分あたり 300字で見積もる**（`references/20_timing.md`）。
-`--chars-per-minute` で変えられるが、**速い側に振らない。**
+**話す速さは実績の台帳（`data/pace.md`）の平均を使う。**`--pace` で台帳を差し替え、
+`--chars-per-minute` で直接指定もできる。
+
+**既定を固定値にしない。**300字/分は原稿を読むアナウンスの速さで、図のある実務説明では
+**1.5倍の過大見積もり**になる。実績では枠10分に対し 202字/分だった。過大に見積もると
+機械が「不足」と言い、**枠の2倍の長さの台本を作る**方向に押す。台帳が空のときだけ
+200字/分で仮置きし、**前提欄に n=0 と出す。**
 
 HTML を渡さないと、枚との対応と数字の照合はできない。**その旨を前提欄に出す。**
 """
@@ -51,7 +59,7 @@ SKIP_MARK = "**話さない**"
 # **単位付き、または2桁以上の数だけを見る。**「上位2項目」の「2」まで拾うと、
 # 雑音で本物が埋もれる（作ったときに実際に誤検出した）
 _NUM = re.compile(r"(?<![\d.])(\d+(?:[.,]\d+)?)\s*"
-                  r"(%|％|パーセント|件|円|人|分|秒|時間|日|台|回|倍|万|億|"
+                  r"(%|％|パーセント|件|円|人|分|秒|時間|日|台|回|倍|"
                   r"メートル|ミリ|キロ|グラム|kg|g|mm|cm|m|min|h)?")
 # 「1分あたり」「毎分」のような割合の言い方は、主張している数値ではない
 _RATE_AFTER = ("あたり", "当たり", "ごと", "間隔", "おき")
@@ -135,6 +143,23 @@ def numbers_of(md: Path):
     return out
 
 
+def pace_of(md: Path):
+    """実績の台帳から (平均の字/分, 件数)。**推定値ではなく実測だけを溜める。**"""
+    vals = []
+    for d in rows_of(md):
+        v = d.get("字/分") or ""
+        try:
+            vals.append(float(_digits(v)))
+        except ValueError:
+            continue
+    return (sum(vals) / len(vals), len(vals)) if vals else (None, 0)
+
+
+def words_of(text: str):
+    """語らしいもの（漢字・カタカナの2文字以上）。つなぎの継承を見るのに使う。"""
+    return {w for w in re.findall(r"[一-龥]{2,}|[ァ-ヴー]{3,}", text)}
+
+
 def phrases_of(md: Path):
     """言い回しの台帳から [(区分, 語)]。"""
     return [(d.get("区分", "—"), d.get("使わない語") or d.get("語"))
@@ -201,8 +226,10 @@ def main():
     ap.add_argument("script", help="台本（script.md）")
     ap.add_argument("--html", help="スライドの HTML。枚との対応と数字の照合に使う")
     ap.add_argument("--minutes", type=float, help="持ち時間（分）。質疑は含めない")
-    ap.add_argument("--chars-per-minute", type=float, default=300.0,
-                    help="話す速さ（既定 300字/分）。**速い側に振らない**")
+    ap.add_argument("--chars-per-minute", type=float,
+                    help="話す速さを直接指定する。**省くと実績の台帳から取る**")
+    ap.add_argument("--pace", default=str(here.parent.parent / "data" / "pace.md"),
+                    help="話す速さの実績の台帳（既定 data/pace.md）")
     ap.add_argument("--terms", help="用語台帳（terms.md）。定義前に出る語を見る")
     ap.add_argument("--numbers",
                     help="数値台帳。**スライドに無いが正しい値**を誤検出から外す")
@@ -214,6 +241,16 @@ def main():
     if not script:
         print("**台本に枚が見つからない。**`## 3. 見出し` の形で枚を区切る")
         return checked.summary("script_check", 0, "枚", 1, {"台本": args.script})
+
+    # 速さは実績から取る。**固定の既定値を置かない**（過大見積もりが尺の判定を狂わせる）
+    pace_path = Path(args.pace)
+    pace_avg, pace_n = pace_of(pace_path) if pace_path.exists() else (None, 0)
+    if args.chars_per_minute:
+        cpm, pace_src = args.chars_per_minute, "指定"
+    elif pace_avg:
+        cpm, pace_src = pace_avg, f"実績 n={pace_n}"
+    else:
+        cpm, pace_src = 200.0, "**実績 n=0（仮置き。発表後に実測を台帳へ足す）**"
 
     findings, notes = [], []        # notes は「要確認」。終了コードを落とさない
     spoken = [(n, h, b) for n, h, b in script if SKIP_MARK not in b]
@@ -236,7 +273,7 @@ def main():
     total = sum(spoken_chars(b) for _, _, b in spoken)
     minutes = args.minutes
     if minutes:
-        budget = minutes * args.chars_per_minute
+        budget = minutes * cpm
         ratio = total / budget if budget else 0
         if ratio > 1.1:
             findings.append(("—", "尺の超過",
@@ -244,6 +281,31 @@ def main():
         elif ratio < 0.8:
             findings.append(("—", "尺の不足",
                              f"{total:.0f}字 / 目安 {budget:.0f}字（{ratio:.2f} 倍）。**足す**"))
+
+    # 1文1行、単位のない数値
+    for no, _, body in spoken:
+        for line in _spoken_lines(body):
+            if re.search(r"[。．].+[^。．\s]", line):
+                findings.append((no, "1文1行でない",
+                                 "**1行に2文以上ある。**読むときの息継ぎの位置が分からない"))
+                break
+        t = _digits(spoken_text(body))
+        for m in _NUM.finditer(t):
+            if m.group(2) or float(norm_num(m.group(1))) < 10:
+                continue
+            notes.append((no, "単位のない数値（要確認）",
+                          f"「{m.group(1)}」。**何の数かを言う**（件数か、率か、1万点あたりか）"))
+
+    # つなぎが前の枚の語を受けているか
+    for i in range(1, len(spoken)):
+        no, _, body = spoken[i]
+        prev = spoken_text(spoken[i - 1][2])
+        bridge = field_value(body, "つなぎ")
+        if not bridge:
+            continue
+        if not (words_of(bridge) & words_of(prev)):
+            findings.append((no, "つなぎが前の枚を受けていない",
+                             "**前の枚に出た語を使って始める。**「結果です」では話が繋がらない"))
 
     # 話さない言い回し
     ph_path = Path(args.phrases)
@@ -302,9 +364,10 @@ def main():
 
     code = checked.summary("script_check", len(script), "枚", len(findings), {
         "持ち時間": f"{minutes:.0f}分" if minutes else "**渡されていない**",
-        "速さ": f"{args.chars_per_minute:.0f}字/分",
+        "速さ": f"{cpm:.0f}字/分（{pace_src}）",
         "スライド": Path(args.html).name if args.html else "**渡されていない（枚と数字は見ていない）**",
-        "数値台帳": Path(args.numbers).name if args.numbers else "無し",
+        "数値台帳": Path(args.numbers).name if args.numbers
+                   else "**渡されていない（スライドに無い正しい値を誤検出しうる）**",
         "言い回しの台帳": f"{len(phrases)} 語",
         "要確認": f"{len(notes)} 件",
     })
