@@ -34,6 +34,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import checked
+from paths import out_dir, project_root, where
 import lxml.html as LH
 
 KIND_TO_XL = {
@@ -332,13 +333,21 @@ def main():
     ap = argparse.ArgumentParser(description="HTML の図から Excel を作り、pptx に貼る。Excel でグラフを作って貼るときに使う")
     ap.add_argument("src", help="HTML（既定）／--paste のときは .xlsx のあるフォルダ")
     ap.add_argument("pptx", nargs="?", help="--paste のときの貼り先")
-    ap.add_argument("-o", "--outdir", default="charts", help="xlsx の出力先")
+    ap.add_argument("-o", "--outdir", default=None,
+                    help="出力先。**省くと <案件>/out/latest/charts**")
     ap.add_argument("--paste", action="store_true",
                     help="作った Excel のグラフを pptx に貼る（**Windows のみ**）")
     ap.add_argument("--dry-run", action="store_true",
                     help="**貼らずに対応づけだけ確かめる。**どの環境でも動く。"
                          "Windows へ持ち込む前にこれを通す")
+    ap.add_argument("--project", help="案件のディレクトリ。**省くと project.md を上に辿る**")
     args = ap.parse_args()
+
+    # **出力先を渡されなければ、案件の決まった場所に出す**（assets/project-layout.md）
+    _root = project_root(getattr(args, "project", None), hint=getattr(args, 'src', None))
+    if not args.outdir:
+        args.outdir = str(out_dir(_root, "charts"))
+        print(where(_root))
 
     warn = []
     if args.paste:

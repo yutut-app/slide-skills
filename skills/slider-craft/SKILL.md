@@ -83,6 +83,7 @@ metadata:
 
 | ファイル | 内容 | 読むタイミング |
 |---|---|---|
+| `assets/project-layout.md`（**4スキル共通の正本**） | **成果物の置き場。**`out/latest` と `out/vNN`、道具の既定、版を切る手順 | **案件を始めるとき、成果物を出す前に必ず** |
 | `references/10_intent.md` | 背景・目的・相手・フェーズの確定。**やらないことの線引き** | **手順1の前に必ず** |
 | `references/20_story.md` | ストーリーラインの型3種と、骨子の作り方 | 手順2（骨子を組むとき） |
 | `references/30_visual.md` | **図解の型の選定**。内容の性質からテンプレートを決める | 手順3（1枚ずつ埋めるとき） |
@@ -275,7 +276,7 @@ python3 scripts/make_html.py --template <テンプレ>.pptx --outline outline.md
 **見るのは HTML の絵。** pptx の検査は `slider-deck` の仕事。
 
 ```bash
-python3 scripts/html_png.py work/*.html -o qa_html
+python3 scripts/html_png.py work/*.html
 ```
 
 **往復は2つの段階に分かれる**（`48_html.md`）。段階で見るものが変わる。
@@ -354,7 +355,7 @@ python3 scripts/ledger_check.py work/*.html --terms terms.md --numbers numbers.m
 **同じものを見ていないので、「ここ」「大きい」「寄っている」は HTML からは分からない。**
 
 ```bash
-python3 scripts/html_png.py work/*.html -o qa_html   # 利用者が見たのと同じ絵
+python3 scripts/html_png.py work/*.html   # 利用者が見たのと同じ絵
 ```
 
 絵を見て、**どこを指しているかと、直した後どうなるかを述べてから直す。**

@@ -103,10 +103,12 @@ pptx は HTML から変換して作る派生物で、**手で直しても次の�
 
 | ファイル | 内容 | 読むタイミング |
 |---|---|---|
+| `assets/project-layout.md`（**4スキル共通の正本**） | **成果物の置き場。**`out/latest` と `out/vNN`、道具の既定、版を切る手順 | **案件を始めるとき、成果物を出す前に必ず** |
+| `skills/slider-deck/scripts/layout_check.py` | **配置の検査**（決めていないフォルダ・同じ用途の別名・日時入りの名前） | **人に渡す前に必ず** |
 | `references/10_rules.md` | **載せ替えの規則**。レイアウトの決まり方、できないこと、検査 | **手順2の前に必ず** |
 | `references/20_templates.md` | テンプレートの置き場所、追加のしかた、解析 | テンプレートを足す・調べるとき |
 | `scripts/reskin_html.py` | **載せ替え本体**（HTML → 別テンプレの HTML） | 手順1〜3 |
-| `<slider-deck>/scripts/qa_render.py` | pptx を1枚1枚 PNG にする | **手順4（必ず）** |
+| `skills/slider-deck/scripts/qa_render.py` | pptx を1枚1枚 PNG にする | **手順4（必ず）** |
 | `scripts/checked.py` | 検査の1行サマリ。**何を何件見たかを出す** | 各スクリプトが使う |
 | `scripts/read_template_style.py` | テンプレートのフォント・配色・レイアウトを読み出す | テンプレートを調べるとき |
 
@@ -181,10 +183,10 @@ python3 scripts/reskin_html.py <作業ディレクトリ> --to <名前> -o <出�
 **溢れは載せ替えでは直らない。**
 
 ```bash
-python3 <slider-craft>/scripts/html_png.py <出力>/print.html -o qa_html
-python3 <slider-craft>/scripts/html2pptx.py <出力>/print.html -o deck/deck.pptx
-python3 <slider-craft>/scripts/fit_check.py deck/deck.pptx
-python3 <slider-deck>/scripts/qa_render.py deck/deck.pptx -o qa
+python3 skills/slider-deck/scripts/html_png.py <出力>/print.html
+python3 skills/slider-deck/scripts/html2pptx.py <出力>/print.html -o deck/deck.pptx
+python3 skills/slider-deck/scripts/fit_check.py deck/deck.pptx
+python3 skills/slider-deck/scripts/qa_render.py deck/deck.pptx
 ```
 
 **画像を1枚ずつ実際に見る。** 生成できたことは、正しさの証拠にならない。
@@ -213,10 +215,29 @@ python3 <slider-deck>/scripts/qa_render.py deck/deck.pptx -o qa
 
 ---
 
+---
+
+## 成果物をどこに出すか
+
+**利用者に「どこに出すか」を考えさせない。**決めごとは `assets/project-layout.md` が正本。
+**ここには繰り返さない**（2か所にあると片方だけ更新されて食い違う）。
+
+要点だけ。
+
+- **見るのは常に `<案件>/out/latest/`。**版が変わっても場所は変わらない
+- 中の名前は版に依らず固定（`deck.pptx` は常に `deck.pptx`）。**日時を名前に入れない**
+- 道具は**出力先を渡さなくても**そこへ出す（`--project` で案件を明示できる）
+- **人に渡す前に `layout_check.py` を通す**
+
+```bash
+python3 skills/slider-deck/scripts/layout_check.py <案件>
+```
+
 ## 承認ポイント — どこで止まるか
 
 | 止める | 止めない |
 |---|---|
+| **版を切るとき**（`out/latest` を `out/vNN` へ写す＝外に出す判断） | `out/latest` の中の上書き |
 | **どのテンプレートに載せ替えるか** | 決まった（要確認でない）レイアウト割付 |
 | 元のファイルを上書きする書き込み | 新しい出力ファイルの生成 |
 | 資料を外部に送る操作（**公開は禁止。**上記「資料を外に出さない」） | 手順4〜5の手直しの往復 |

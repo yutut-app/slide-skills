@@ -139,6 +139,8 @@ HTML に書けないものなので、pptx 側で作る。
 
 | ファイル | 内容 | 読むタイミング |
 |---|---|---|
+| `assets/project-layout.md`（**4スキル共通の正本**） | **成果物の置き場。**`out/latest` と `out/vNN`、道具の既定、版を切る手順 | **案件を始めるとき、成果物を出す前に必ず** |
+| `skills/slider-deck/scripts/layout_check.py` | **配置の検査**（決めていないフォルダ・同じ用途の別名・日時入りの名前） | **人に渡す前に必ず** |
 | `references/05_receive.md` | テンプレートを作り直すとき・HTML が会話に貼られたとき | **該当するとき必ず** |
 | `references/52_charts.md` | **グラフを Excel で作って貼る**。数の出どころ・貼り付け | **グラフを入れる枚があるとき必ず** |
 | `references/55_revise.md` | **再生成と差分修正の切り替え**。上書き禁止、差分の報告 | **手順4で必ず** |
@@ -344,9 +346,9 @@ python3 scripts/html2pptx.py <作業>/print.html -o deck/deck_rev<n>.pptx
 `references/60_qa.md` に従う。**3つとも回す。1つでも欠けたら「検査した」と書かない。**
 
 ```bash
-python3 scripts/qa_render.py deck/deck_rev<n>.pptx -o qa
+python3 scripts/qa_render.py deck/deck_rev<n>.pptx
 python3 scripts/fit_check.py check deck/deck_rev<n>.pptx
-python3 scripts/html_png.py <作業>/print.html -o qa_html
+python3 scripts/html_png.py <作業>/print.html
 ```
 
 **画像を1枚ずつ実際に見る。** 生成できたことは、正しさの証拠にならない。
@@ -397,10 +399,29 @@ python3 scripts/diff_slides.py deck/deck_rev<n-1>.pptx deck/deck_rev<n>.pptx
 
 ---
 
+---
+
+## 成果物をどこに出すか
+
+**利用者に「どこに出すか」を考えさせない。**決めごとは `assets/project-layout.md` が正本。
+**ここには繰り返さない**（2か所にあると片方だけ更新されて食い違う）。
+
+要点だけ。
+
+- **見るのは常に `<案件>/out/latest/`。**版が変わっても場所は変わらない
+- 中の名前は版に依らず固定（`deck.pptx` は常に `deck.pptx`）。**日時を名前に入れない**
+- 道具は**出力先を渡さなくても**そこへ出す（`--project` で案件を明示できる）
+- **人に渡す前に `layout_check.py` を通す**
+
+```bash
+python3 skills/slider-deck/scripts/layout_check.py <案件>
+```
+
 ## 承認ポイント — どこで止まるか
 
 | 止める | 止めない |
 |---|---|
+| **版を切るとき**（`out/latest` を `out/vNN` へ写す＝外に出す判断） | `out/latest` の中の上書き |
 | **段階の切り替え**（利用者の宣言による。こちらから打ち切らない） | 変換のやり直し |
 | 元の HTML を上書きする書き込み | 新しい出力ファイルの生成 |
 | 資料を外部に送る操作（**公開は禁止**） | 手順2〜4の往復 |

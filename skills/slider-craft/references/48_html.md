@@ -247,7 +247,7 @@ python3 skills/slider-deck/scripts/stage0.py <テンプレ>/003.html -o work/sta
 どこを指しているかと、直した後どうなるかを述べてから直す。
 
 ```bash
-python3 scripts/html_png.py work/*.html -o qa_html    # 利用者が見たのと同じ絵
+python3 scripts/html_png.py work/*.html    # 利用者が見たのと同じ絵
 ```
 
 **推測で直さない。** 絵を見ずに直すと、別の箇所を直して「直しました」と言うことになる。
@@ -258,7 +258,7 @@ python3 scripts/html_png.py work/*.html -o qa_html    # 利用者が見たのと
 **既定は HTML の絵。** 利用者が見たのは HTML であり、指示の出どころがそこだから。
 
 ```bash
-python3 scripts/html_png.py work/*.html -o qa_html      # 既定。毎回これ
+python3 scripts/html_png.py work/*.html      # 既定。毎回これ
 ```
 
 **pptx の絵は、既定では使わない。** 指定の書体が実行環境に無いと
@@ -277,7 +277,7 @@ LibreOffice が別の書体に置き換え、**折り返し位置が変わる。
 
 ```bash
 python3 skills/slider-deck/scripts/html2pptx.py work/*.html -o deck/deck_rev<n>.pptx
-python3 skills/slider-deck/scripts/qa_render.py deck/deck_rev<n>.pptx -o qa
+python3 skills/slider-deck/scripts/qa_render.py deck/deck_rev<n>.pptx
 python3 skills/slider-deck/scripts/fit_check.py check deck/deck_rev<n>.pptx
 ```
 

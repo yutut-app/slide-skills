@@ -85,10 +85,10 @@ python3 scripts/reskin_html.py <作業ディレクトリ> --to <テンプレ名>
 **載せ替えだけでは終わらない。寸法が変わっているので溢れる。**
 
 ```bash
-python3 <slider-craft>/scripts/html_png.py <出力先>/print.html -o qa_html
-python3 <slider-craft>/scripts/html2pptx.py <出力先>/print.html -o deck/deck.pptx
-python3 <slider-craft>/scripts/fit_check.py deck/deck.pptx
-python3 <slider-deck>/scripts/qa_render.py deck/deck.pptx -o qa
+python3 skills/slider-deck/scripts/html_png.py <出力先>/print.html
+python3 skills/slider-deck/scripts/html2pptx.py <出力先>/print.html -o deck/deck.pptx
+python3 skills/slider-deck/scripts/fit_check.py deck/deck.pptx
+python3 skills/slider-deck/scripts/qa_render.py deck/deck.pptx
 ```
 
 **溢れが出たら直すのは HTML。** pptx を手で直さない。

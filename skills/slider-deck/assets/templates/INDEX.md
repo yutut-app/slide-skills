@@ -135,5 +135,5 @@ python3 scripts/gen_pptx_templates.py  --font '<日本語フォント名>'
 見た目の確認は次で行う。**PDF を経由しない**（日本語が文字化けする）。
 
 ```bash
-python3 <slider-deck>/scripts/qa_render.py <file> -o qa
+python3 skills/slider-deck/scripts/qa_render.py <file>
 ```

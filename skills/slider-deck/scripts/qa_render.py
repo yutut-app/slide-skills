@@ -31,6 +31,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import checked
+from paths import out_dir, project_root, where
 
 P_NS = "{http://schemas.openxmlformats.org/presentationml/2006/main}"
 
@@ -220,10 +221,18 @@ def means():
 def main():
     ap = argparse.ArgumentParser(description="pptx/xlsx を PNG にして目視検査する。自分の目で見るときに使う")
     ap.add_argument("files", nargs="*", help="検査する pptx / xlsx")
-    ap.add_argument("-o", "--outdir", default="qa", help="出力先（既定: ./qa）")
+    ap.add_argument("-o", "--outdir", default=None,
+                    help="出力先。**省くと <案件>/out/latest/qa**")
     ap.add_argument("--probe", action="store_true",
                     help="使える画像化の手段を確認するだけ。**検査の前に必ず一度実行する**")
+    ap.add_argument("--project", help="案件のディレクトリ。**省くと project.md を上に辿る**")
     args = ap.parse_args()
+
+    # **出力先を渡されなければ、案件の決まった場所に出す**（assets/project-layout.md）
+    _root = project_root(getattr(args, "project", None), hint=getattr(args, 'pptx', None))
+    if not args.outdir:
+        args.outdir = str(out_dir(_root, "qa"))
+        print(where(_root))
 
     if args.probe:
         sys.exit(probe())

@@ -34,7 +34,7 @@ slide-skills/                     ← リポジトリをクローンした場所
 | 置くもの | 形 | 使う道具 |
 |---|---|---|
 | **HTML テンプレート一式** | `<テンプレ名>/` ディレクトリ。`template-manifest.md` を含む | **載せ替え（このスキル）**と、資料作成の土台 |
-| .pptx テンプレート | ファイル1つ | `<slider-craft>/scripts/make_html.py`（経路B）だけ |
+| .pptx テンプレート | ファイル1つ | `skills/slider-craft/scripts/make_html.py`（経路B）だけ |
 
 **このスキルが一覧に出すのは前者だけ。** `.pptx` は載せ替えに使えない。
 
@@ -70,7 +70,7 @@ macOS:                 export SLIDE_TEMPLATE_DIR=~/templates
 **HTML テンプレートの見た目は、100% HTML 側で決まる。**
 変換は python-pptx の空ファイルを土台にするので、
 **実物の .pptx のマスターもテーマもロゴも、出力には一切入らない**
-（`<slider-deck>/scripts/html2pptx.py` の `build_absolute`）。
+（`skills/slider-deck/scripts/html2pptx.py` の `build_absolute`）。
 
 だから「実物のテンプレートに合わせる」とは、
 **実物の中身を HTML テンプレート側に取り込むこと。**
@@ -98,7 +98,7 @@ assets/templates/deck/<テンプレ名>/source.pptx    ← 実物
 **1. 画像を取り出す。**
 
 ```bash
-python3 <slider-craft>/scripts/extract_assets.py <テンプレ>/source.pptx -o /tmp/assets
+python3 skills/slider-craft/scripts/extract_assets.py <テンプレ>/source.pptx -o /tmp/assets
 ```
 
 画像ごとに大きさと**使われ場所**（`master` / `layout:<n>` / `slide:<n>`）が出る。
@@ -112,7 +112,7 @@ cp /tmp/assets/<選んだもの>.png <テンプレ>/images/logo.png
 **2. 座標・文字・書体の差を出す。**
 
 ```bash
-python3 <slider-deck>/scripts/pptx_diff_html.py <テンプレ>/source.pptx <テンプレ>/print.html
+python3 skills/slider-deck/scripts/pptx_diff_html.py <テンプレ>/source.pptx <テンプレ>/print.html
 ```
 
 **3. 差を HTML テンプレートに反映する。** 直すのは HTML。
@@ -121,7 +121,7 @@ python3 <slider-deck>/scripts/pptx_diff_html.py <テンプレ>/source.pptx <テ�
 **4. 指紋を取り直し、受け取る側と突き合わせる。**
 
 ```bash
-python3 <slider-craft>/scripts/handoff.py <テンプレ> --fingerprint
+python3 skills/slider-deck/scripts/handoff.py <テンプレ> --fingerprint
 ```
 
 ### 取り込めないもの
@@ -147,12 +147,12 @@ python3 <slider-craft>/scripts/handoff.py <テンプレ> --fingerprint
 | 種別 | なぜ入れないか |
 |---|---|
 | 利用者が置いたもの | 置くかどうかは利用者が決める |
-| **汎用のもの** | **`<slider-craft>/scripts/gen_deck_templates.py` の生成物。**生成できるものを git に置かない |
+| **汎用のもの** | **`skills/slider-craft/scripts/gen_deck_templates.py` の生成物。**生成できるものを git に置かない |
 
 **空でも異常ではない。** 汎用テンプレートが要るなら、その場で生成する。
 
 ```bash
-python3 <slider-craft>/scripts/gen_deck_templates.py
+python3 skills/slider-craft/scripts/gen_deck_templates.py
 ```
 
 **一覧が空のときに「テンプレートが無い」で止めない。**
@@ -275,7 +275,7 @@ python3 scripts/read_template_style.py <テンプレート>.pptx
 汎用のものを作れる。**利用者のテンプレートが手に入るまでの土台。**
 
 ```bash
-python3 <slider-craft>/scripts/gen_deck_templates.py
+python3 skills/slider-craft/scripts/gen_deck_templates.py
 ```
 
 | 名前 | 用途 |
@@ -296,9 +296,9 @@ python3 <slider-craft>/scripts/gen_deck_templates.py
 
 ```bash
 cd ../slider-craft
-python3 scripts/gen_chart_templates.py --font '<日本語フォント名>'
-python3 scripts/gen_qc7_templates.py   --font '<日本語フォント名>'
-python3 scripts/gen_pptx_templates.py  --font '<日本語フォント名>'
+python3 skills/slider-deck/scripts/gen_chart_templates.py --font '<日本語フォント名>'
+python3 skills/slider-deck/scripts/gen_qc7_templates.py   --font '<日本語フォント名>'
+python3 skills/slider-deck/scripts/gen_pptx_templates.py  --font '<日本語フォント名>'
 ```
 
 フォント名は [3](#3-テンプレートを調べる) の「本文用・日本語(ea)」を使う。

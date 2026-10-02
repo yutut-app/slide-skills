@@ -36,6 +36,7 @@ import re
 from lxml import html as LH
 
 import checked
+from paths import out_dir, project_root, where
 
 # 探す順は OS で変える。**Windows は Edge を先に見る。**
 # Edge は標準で入っており、Chrome は入っていても
@@ -194,14 +195,22 @@ def main():
         description="HTML を1枚1枚 PNG にする（ローカルのみ。公開しない）。利用者が見ている絵を出すときに使う")
     ap.add_argument("html", nargs="*",
                     help="スライドの HTML。print.html を渡すと中の iframe 順に展開する")
-    ap.add_argument("-o", "--out", default="qa_html", help="出力先ディレクトリ")
+    ap.add_argument("-o", "--out", default=None,
+                    help="出力先。**省くと <案件>/out/latest/qa**")
     ap.add_argument("--scale", type=float, default=1.0,
                     help="拡大率。既定 1.0。文字を細かく見たいときに 2 にする")
     ap.add_argument("--probe", action="store_true",
                     help="使える道具があるかだけ調べる")
     ap.add_argument("--browser",
                     help="使うブラウザの実行ファイル。**既定の場所に無いときに渡す**")
+    ap.add_argument("--project", help="案件のディレクトリ。**省くと project.md を上に辿る**")
     args = ap.parse_args()
+
+    # **出力先を渡されなければ、案件の決まった場所に出す**（assets/project-layout.md）
+    _root = project_root(getattr(args, "project", None), hint=(args.html[0] if getattr(args, 'html', None) else None))
+    if not args.out:
+        args.out = str(out_dir(_root, "qa"))
+        print(where(_root))
 
     browser = find_browser(args.browser, quiet=args.probe)
     if args.probe:
