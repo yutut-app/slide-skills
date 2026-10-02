@@ -172,7 +172,7 @@ python3 -m http.server 8765 --bind 127.0.0.1 --directory <HTMLのある場所>
 ### 段階0 を飛ばさない
 
 ```bash
-python3 <slider-deck>/scripts/stage0.py <テンプレ>/003.html -o work/stage0
+python3 skills/slider-deck/scripts/stage0.py <テンプレ>/003.html -o work/stage0
 ```
 
 1コマンドで、HTML の絵・pptx・pptx の絵・レイアウト検査を出す。
@@ -276,9 +276,9 @@ LibreOffice が別の書体に置き換え、**折り返し位置が変わる。
 | 利用者に渡す前（最終） | 渡すのは pptx。見ずに渡さない |
 
 ```bash
-python3 <slider-deck>/scripts/html2pptx.py work/*.html -o deck/deck_rev<n>.pptx
-python3 <slider-deck>/scripts/qa_render.py deck/deck_rev<n>.pptx -o qa
-python3 <slider-deck>/scripts/fit_check.py check deck/deck_rev<n>.pptx
+python3 skills/slider-deck/scripts/html2pptx.py work/*.html -o deck/deck_rev<n>.pptx
+python3 skills/slider-deck/scripts/qa_render.py deck/deck_rev<n>.pptx -o qa
+python3 skills/slider-deck/scripts/fit_check.py check deck/deck_rev<n>.pptx
 ```
 
 **出したら HTML の絵と並べて、ずれを探す。** 片方だけでは出ない。
@@ -292,7 +292,7 @@ python3 <slider-deck>/scripts/fit_check.py check deck/deck_rev<n>.pptx
 その場合は上の条件を緩めてよい。**入っているかを確かめてから緩める。**
 
 ```bash
-python3 <slider-deck>/scripts/qa_render.py --probe
+python3 skills/slider-deck/scripts/qa_render.py --probe
 ```
 
 **どこにも公開しない。** ローカルに PNG を書くだけ。
@@ -300,7 +300,7 @@ python3 <slider-deck>/scripts/qa_render.py --probe
 **区切りごとに版を残す。** 出力は毎回別名にし、前の版と比べられるようにする。
 
 ```bash
-python3 <slider-deck>/scripts/diff_slides.py deck/deck_rev1.pptx deck/deck_rev2.pptx
+python3 skills/slider-deck/scripts/diff_slides.py deck/deck_rev1.pptx deck/deck_rev2.pptx
 ```
 
 **重なり・はみ出し・溢れはゼロになるまで回す。**回数で打ち切らない
@@ -329,10 +329,10 @@ python3 <slider-deck>/scripts/diff_slides.py deck/deck_rev1.pptx deck/deck_rev2.
 
 ```bash
 # print.html を渡すと、中の iframe の並びをそのまま使う
-python3 <slider-deck>/scripts/html2pptx.py <テンプレ>/print.html -o deck/deck.pptx
+python3 skills/slider-deck/scripts/html2pptx.py <テンプレ>/print.html -o deck/deck.pptx
 
 # ファイルを個別に、順番に渡してもよい
-python3 <slider-deck>/scripts/html2pptx.py 001.html 003.html 003.html 004.html -o deck/deck.pptx
+python3 skills/slider-deck/scripts/html2pptx.py 001.html 003.html 003.html 004.html -o deck/deck.pptx
 ```
 
 **テンプレートの .pptx は要らない。** HTML に書かれた座標をそのまま写す。
@@ -355,7 +355,7 @@ HTML を起こした人が、元 PPTX の pt 座標を**どの係数で px に�
 **「既定（96dpi）」と出たら、それでよいか確かめる。**
 
 ```bash
-python3 <slider-deck>/scripts/html2pptx.py <テンプレ>/print.html -o out.pptx --px-per-pt 1.641026
+python3 skills/slider-deck/scripts/html2pptx.py <テンプレ>/print.html -o out.pptx --px-per-pt 1.641026
 ```
 
 ### 使い方
@@ -374,7 +374,7 @@ python3 <slider-deck>/scripts/html2pptx.py <テンプレ>/print.html -o out.pptx
 テンプレートを作った直後と、大きく直した後は、実物で確かめる。
 
 ```bash
-python3 <slider-deck>/scripts/html2pptx.py <テンプレ>/print.html -o <テンプレ>/preview/<名前>.pptx
+python3 skills/slider-deck/scripts/html2pptx.py <テンプレ>/print.html -o <テンプレ>/preview/<名前>.pptx
 ```
 
 **確認用の pptx はテンプレート直下に置かない。** `preview/` に入れる。
@@ -636,3 +636,29 @@ HTML で凝った表組みを作り込まない。
 
 **`<img>` で貼った図は画像のまま。**受け取った側が数字を直せない。
 数字を含む図は `<table>` にするか、元ファイルを別添する（`50_build.md`）。
+
+---
+
+## 全枚に効かせる変更が入ったときは、生成経路を1本にそろえる ★
+
+**起点の HTML に差分を重ねて育てると、後段で再生成されない枚ができる。**
+実績として、全枚のパネルを外す変更が一部の枚に効かず、原因が分かるまで時間を使った。
+
+| 状況 | どうするか |
+|---|---|
+| 全枚に効かせる変更が入ると分かった | **その時点で生成経路を1本にそろえる**（全枚が同じ段を通る） |
+| そろえられない（既に育っている） | **最終段の後処理を正規の手段として持つ。**場当たりの手直しにしない |
+| どちらもしない | **禁止。**効いた枚と効かない枚が混ざり、見た目では区別できない |
+
+**変更を入れたら、必ず全枚を数える。**「n枚に適用した」を報告に出す。
+枚数が総数と合わなければ、経路の外にある枚がある。
+
+## 枚を複製して増やすときは、新しい id を与えてから挿入する ★
+
+**複製が元と同じ id を持ったまま入ると、以降の「この枚を書き換える」が別の枚に当たる。**
+実績として、新しい枚の中身が次の枚に入り、**元の枚が空のまま公開された。**
+
+1. 複製する
+2. **id を振り直す**（枚の id、枚の中の要素の id も）
+3. 挿入する
+4. **id の重複が無いことを確かめる**（同じ id が2つあれば止める）

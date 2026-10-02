@@ -114,9 +114,9 @@
 テンプレートはスクリプトから生成している。手で直さず、スクリプトを直して再生成する。
 
 ```bash
-python3 scripts/gen_chart_templates.py   # charts/
-python3 scripts/gen_qc7_templates.py     # qc7/ の Excel
-python3 scripts/gen_pptx_templates.py    # qc7/ の pptx と n7/
+python3 skills/slider-deck/scripts/gen_chart_templates.py   # charts/
+python3 skills/slider-deck/scripts/gen_qc7_templates.py     # qc7/ の Excel
+python3 skills/slider-deck/scripts/gen_pptx_templates.py    # qc7/ の pptx と n7/
 ```
 
 必要なパッケージは `openpyxl` と `python-pptx`。
@@ -127,13 +127,13 @@ python3 scripts/gen_pptx_templates.py    # qc7/ の pptx と n7/
 
 ```bash
 python3 scripts/read_template_style.py ../../assets/templates/deck/<file>.pptx
-python3 scripts/gen_chart_templates.py --font '<日本語フォント名>'
-python3 scripts/gen_qc7_templates.py   --font '<日本語フォント名>'
-python3 scripts/gen_pptx_templates.py  --font '<日本語フォント名>'
+python3 skills/slider-deck/scripts/gen_chart_templates.py --font '<日本語フォント名>'
+python3 skills/slider-deck/scripts/gen_qc7_templates.py   --font '<日本語フォント名>'
+python3 skills/slider-deck/scripts/gen_pptx_templates.py  --font '<日本語フォント名>'
 ```
 
 見た目の確認は次で行う。**PDF を経由しない**（日本語が文字化けする）。
 
 ```bash
-python3 <slider-deck>/scripts/qa_render.py <file> -o qa
+python3 skills/slider-deck/scripts/qa_render.py <file> -o qa
 ```

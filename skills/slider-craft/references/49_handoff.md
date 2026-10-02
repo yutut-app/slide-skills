@@ -334,8 +334,8 @@ terms.md（用語）／numbers.md（数値）
 
 ```bash
 python3 scripts/html_png.py <受け取った>/print.html -o qa_html
-python3 <slider-deck>/scripts/html2pptx.py <受け取った>/print.html -o deck/deck_rev<n>.pptx
-python3 <slider-deck>/scripts/qa_render.py deck/deck_rev<n>.pptx -o qa
+python3 skills/slider-deck/scripts/html2pptx.py <受け取った>/print.html -o deck/deck_rev<n>.pptx
+python3 skills/slider-deck/scripts/qa_render.py deck/deck_rev<n>.pptx -o qa
 ```
 
 **同じ HTML でも、相手の環境とは絵が違う。** フォントが違えば折り返しが変わる。
@@ -343,3 +343,17 @@ python3 <slider-deck>/scripts/qa_render.py deck/deck_rev<n>.pptx -o qa
 自分の環境で見えているものが、自分の環境での事実。
 
 **返すときも、同じ型の引き継ぎメモを付ける。** 片道だけ書いても続かない。
+
+---
+
+## 再現手順は、必ず再構成で終わる ★
+
+**スクリプトを直しただけでは、正本とページに反映されない。**
+実績として、直した後に古い絵を見て「直っていない」と報告しかけ、
+**1度は古い絵を利用者に見せた。**
+
+| 守ること | 理由 |
+|---|---|
+| 再現手順（`build_all.sh` 等）の**末尾に再構成を置く** | 直しが絵に出ないまま次へ進むのを防ぐ |
+| **絵を見る前に、再構成が走ったことを確かめる** | 出力の時刻が入力より新しいかを見る |
+| 直した後の絵を見せるときは、**再構成した時刻を添える** | 古い絵を見せた事故は、時刻があれば気づける |

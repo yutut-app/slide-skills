@@ -15,12 +15,38 @@
 
 ---
 
+## 0. テンプレートごとの基準値を先に取る ★
+
+**全枚でそろえるべき値は、テンプレートごとに決まっている。**
+案件の `template-manifest.md` に次を持たせ、**スキル本文に数値を埋めない**
+（投影環境とテンプレートで変わる）。
+
+| 鍵 | 意味 | 無いとどうなるか |
+|---|---|---|
+| `body-top` | 本文の上端（px） | 枚ごとに上がばらつく |
+| `body-bottom` | 本文の下端（px。フッターの上） | **下の空きが枚ごとに違う。**8枚まとめて指摘された |
+| `min-font` | 本文・表・軸・注記の下限（px） | 小さすぎて投影で読めない |
+| `bar-width-ratio` | 棒の幅 ÷ 列幅 | 棒が細い・離れて見える（`31_chart.md`） |
+
+**無いときは、最初の1枚を作った時点で測って書き込む。**以降その値を正とする。
+`scripts/visual_check.py` がこの値と全枚を突き合わせる。
+
+## 0-1. 拡大は、空きを作ってから当てる ★
+
+**順序が結果を決める。**文字を大きくしてから余白を詰めると、折り返しが大量に出て、
+**文言を削る判断**まで巻き込む。逆順なら起きない。
+
+1. 不要な枠・パネルを外す（空きを作る）
+2. 上端・下端を基準値にそろえる
+3. **その後で**文字を大きくする
+4. `visual_check.py` を通す
+
 ## 1. 先に縦グリッドを固定する
 
 **中身を書いてから場所を探さない。** 必ずどこかが重なる。
 
 ```bash
-python3 <slider-deck>/scripts/fit_check.py budget --template <テンプレ>.pptx --layout 1
+python3 skills/slider-deck/scripts/fit_check.py budget --template <テンプレ>.pptx --layout 1
 ```
 
 次が出る。**スライドサイズはテンプレートから取る。決め打ちしない。**
@@ -62,7 +88,7 @@ python3 <slider-deck>/scripts/fit_check.py budget --template <テンプレ>.pptx
 ```
 
 ```bash
-python3 <slider-deck>/scripts/fit_check.py budget --template <テンプレ>.pptx --box 9.0x3.2 --pt 16
+python3 skills/slider-deck/scripts/fit_check.py budget --template <テンプレ>.pptx --box 9.0x3.2 --pt 16
 ```
 
 **この上限を超える文言は書かない。** 書いてから縮めるのではなく、
@@ -112,7 +138,7 @@ python3 <slider-deck>/scripts/fit_check.py budget --template <テンプレ>.pptx
 ## 5. 作った後の検出
 
 ```bash
-python3 <slider-deck>/scripts/fit_check.py check <deck>.pptx
+python3 skills/slider-deck/scripts/fit_check.py check <deck>.pptx
 ```
 
 検出するものと、その扱い。

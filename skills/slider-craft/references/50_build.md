@@ -34,7 +34,7 @@
 直すとブランドが崩れ、先方のフォーマット違反になる。
 
 ```bash
-python3 scripts/fit_check.py budget --template <テンプレ>.pptx
+python3 skills/slider-deck/scripts/fit_check.py budget --template <テンプレ>.pptx
 ```
 
 文字数の上限も、このサイズから計算し直す（**配布元の規約**（<slider-craft>/references/45_layout.md））。
@@ -79,7 +79,7 @@ deck.yaml  ──┬──► preview.html （ブラウザで見る。速い）
 |---|---|
 | `deck.yaml` の書式 | **確定**（下記） |
 | `deck.yaml` → pptx | **公式 `pptx` スキルに委譲する**（下記の手順） |
-| HTML → pptx | **実装済み**（`scripts/html2pptx.py`） |
+| HTML → pptx | **実装済み**（`skills/slider-deck/scripts/html2pptx.py`） |
 | テンプレート → 編集用 HTML | **実装済み**（**配布元の道具**（make_html.py）） |
 
 プレビューが無い間は、pptx を作ってから `<slider-deck>/references/60_qa.md` の手順で画像化して見る。
@@ -143,7 +143,7 @@ slides:
 **公式 `pptx` スキルの「Editing existing decks and templates」の手順に従う。**
 本スキルで再実装しない。要点だけ再掲する。
 
-1. `python scripts/thumbnail.py template.pptx template-thumbs` でレイアウト一覧を作る
+1. 公式スキル同梱の thumbnail.py に `template.pptx template-thumbs` を渡してレイアウト一覧を作る
    （第2引数を必ず渡す。既定名だと他のデッキの一覧を上書きする）
 2. `assets/template-map.md` に、どのレイアウトを `layout` のどれに使うかを書く
 3. unzip → `ppt/slides/slideN.xml` を差し替え → zip
@@ -224,3 +224,21 @@ const ACCENT = "C00000"; // 基準線・目標線・逸脱の指摘のみ
 ```bash
 ls <案内しようとしているパス> || echo "無い。実際の場所を探す"
 ```
+
+
+---
+
+## 2案を見せるとき ★
+
+**「両方作って判断させて」と言われたら、比較用に1つへ混ぜない。**
+実績として、混ぜたために2回やり直し、さらに**片方が比較の体をなしていなかった。**
+
+| 守ること | 外したときに起きたこと |
+|---|---|
+| **案ごとに、通しで開ける成果物を1つずつ出す** | 1つに混ぜ、どれが案なのか分からなくなった |
+| **案Aで消す要素は、案Bのどこへ行くのかを必ず反映する** | 消しただけで、中身がどこにも無い案ができた |
+| **名前で区別する**（題名に案の名を入れる） | 同じ題名が並び、見分けがつかなかった |
+| **同じ版から派生させる** | 片方だけ文字拡大前という状態になった |
+
+**作る前に、何と何を比べるのかを1行で書いて合意する。**
+「①と②」が何を指すかは、作る側と頼む側でずれる。

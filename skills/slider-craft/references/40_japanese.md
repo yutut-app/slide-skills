@@ -346,9 +346,9 @@ python3 scripts/read_template_style.py ../../assets/templates/deck/<file>.pptx
 作り直す。** 図だけ別のフォントだと、貼った瞬間に浮く。
 
 ```bash
-python3 scripts/gen_chart_templates.py --font '<日本語フォント名>'
-python3 scripts/gen_qc7_templates.py   --font '<日本語フォント名>'
-python3 scripts/gen_pptx_templates.py  --font '<日本語フォント名>'
+python3 skills/slider-deck/scripts/gen_chart_templates.py --font '<日本語フォント名>'
+python3 skills/slider-deck/scripts/gen_qc7_templates.py   --font '<日本語フォント名>'
+python3 skills/slider-deck/scripts/gen_pptx_templates.py  --font '<日本語フォント名>'
 ```
 
 配色も同じ。**テンプレートのテーマ配色に合わせる。**

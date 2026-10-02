@@ -86,8 +86,10 @@ metadata:
 | `references/10_intent.md` | 背景・目的・相手・フェーズの確定。**やらないことの線引き** | **手順1の前に必ず** |
 | `references/20_story.md` | ストーリーラインの型3種と、骨子の作り方 | 手順2（骨子を組むとき） |
 | `references/30_visual.md` | **図解の型の選定**。内容の性質からテンプレートを決める | 手順3（1枚ずつ埋めるとき） |
+| `references/31_chart.md` | **グラフと図の既定**。並べた図の軸の共有、棒の幅と位置、消える値、ラベル、判定表 | **型を選んだ後、描く前に必ず** |
 | `references/40_japanese.md` | **文体規約とAI感の除去**。禁止語・文字量・改行 | **手順3と手順5で必ず** |
 | `references/45_layout.md` | **レイアウトの検算**。縦グリッド、入る文字数、入らないときの4択 | **手順3で文言を書く前に必ず** |
+| `scripts/visual_check.py` | **図版と余白の検査**（上下端・最小文字・文字の重なり・枠に入らない値・判定表の未確認） | **絵を人に見せる前に必ず** |
 | `scripts/ledger_check.py` | **台帳で照合する**（古い語・以前の値が0件か／MLの型／修正の経緯の印） | **手順5の関所と、直した後に必ず** |
 | `references/05_official_pptx.md` | **公式 pptx スキルとの線引き**（技術は委譲、思想は使わない） | **最初に1度必ず** |
 | `references/50_build.md` | 生成経路（テンプレートの形式ごと）、図の元ファイルの別添、出力先の決まり | テンプレートの形式が分かったとき |
@@ -102,7 +104,7 @@ metadata:
 | `scripts/splice.py` | **共通パーツを保ったまま本文だけ入れ替える。**入れ替え忘れも出す | **手順4で毎枚** |
 | `scripts/handoff.py` | 引き継ぎメモの雛形。`--fingerprint` で版と指紋だけ出す | 担当が分かれるとき |
 | `scripts/checked.py` | 検査のサマリ行（対象・件数・前提）。**0件と未実施を区別する** | 直接は使わない |
-| `<slider-deck>/scripts/fit_check.py` | **レイアウトの検算**。`budget` で書く前の予算を出す | **手順3で必ず** |
+| `skills/slider-deck/scripts/fit_check.py` | **レイアウトの検算**。`budget` で書く前の予算を出す | **手順3で必ず** |
 | `scripts/html_png.py` | **HTML を1枚1枚 PNG にする**（Edge / Chrome。ローカルのみ） | **手順5と手順6（既定）** |
 | `assets/deck.yaml.template` | 中間成果物の雛形（deck.yaml 経路のとき） | 手順2の終わり |
 | `scripts/gen_deck_templates.py` | **テンプレートが1つも無いとき**に汎用の .pptx を作る（経路B用） | 手順0でテンプレートが無いとき |
@@ -143,8 +145,8 @@ metadata:
 | 出力先ディレクトリ | 利用者に確認せず `deck/` を作り、理由を1行述べる |
 | 資料テンプレート（リポジトリ直下 `assets/templates/deck/`） | **あればそれに従う。**無ければ既定の配色規約で作る。**勝手にテンプレートを探しに行かない**。テンプレートには2つの形があり、**扱いが違う**（下表） |
 | `python-pptx` / `openpyxl` | `python3 -m pip install python-pptx openpyxl` |
-| 画像化の手段 | `python3 <slider-deck>/scripts/qa_render.py --probe` で確認する。**Windows は PowerPoint COM に自動で切り替わる。**どちらも無ければ手順5で目視を依頼し、**検査していないと明記する** |
-| テンプレートの形式とサイズ | HTML 一式なら `template-manifest.md`、.pptx なら `fit_check.py budget --template <t>.pptx`。**16:9 に決め打ちしない** |
+| 画像化の手段 | `python3 skills/slider-deck/scripts/qa_render.py --probe` で確認する。**Windows は PowerPoint COM に自動で切り替わる。**どちらも無ければ手順5で目視を依頼し、**検査していないと明記する** |
+| テンプレートの形式とサイズ | HTML 一式なら `template-manifest.md`、.pptx なら `skills/slider-deck/scripts/fit_check.py budget --template <t>.pptx`。**16:9 に決め打ちしない** |
 
 #### まずテンプレートを選ばせる ★ここで止まる
 
@@ -232,7 +234,7 @@ ls -d assets/templates/deck/*/
 書いてから縮めるのではなく、上限を見てから文言を決める。往復の大半はここで消える。
 
 ```bash
-python3 <slider-deck>/scripts/fit_check.py budget --template <テンプレ>.pptx --box <幅>x<高さ> --pt 16
+python3 skills/slider-deck/scripts/fit_check.py budget --template <テンプレ>.pptx --box <幅>x<高さ> --pt 16
 ```
 
 ### 4. HTML を作る／直す
@@ -389,6 +391,14 @@ python3 scripts/html_png.py work/*.html -o qa_html   # 利用者が見たのと�
 
 ---
 
+## 図を描くときの立場
+
+**2つの図が対応すると言うなら、軸・目盛・原点を共有させる。共有できないなら並べない。**
+見た目を目分量で決めない。**テンプレートごとの基準値に照らす**（`45_layout.md` 0章）。
+**値が枠に入らないときは外に出す。黙って消すことを許さない**（`31_chart.md`）。
+
+---
+
 ## 承認ポイント — どこで止まるか
 
 | 止める | 止めない |
@@ -396,6 +406,8 @@ python3 scripts/html_png.py work/*.html -o qa_html   # 利用者が見たのと�
 | 手順1の意図（背景・目的・相手・フェーズ） | 図解の型の選定 |
 | **どのテンプレートを使うか**（複数あるとき） | 配色・フォント・レイアウトの調整 |
 | 手順2の骨子（スライド一覧） | 種別ごとの HTML の選択 |
+| **既にできている資料の全枚に効く変更**（レイアウトの作り直し、文字サイズの一括変更）。**先に設計を出す** | 1枚の中の調整 |
+| **2案を作る依頼**（何と何を比べるか、案の名前を先に合意） | 案の中の作り込み |
 | **段階の切り替え**（利用者の宣言。進むのも戻るのも） | 段階の中の直し |
 | **pptx を提出先・第三者に渡す操作** | 手元での変換と検査 |
 | **資料テンプレートを書き換える操作** | 案件ディレクトリの中の直し |
@@ -414,6 +426,7 @@ python3 scripts/html_png.py work/*.html -o qa_html   # 利用者が見たのと�
 ### 聞かずに決める
 
 - 図解の型の選定（`30_visual.md` の対応表で決まる）
+- 棒の幅・位置・ラベルの置き方（`31_chart.md` の既定と `template-manifest.md` の値で決まる）
 - スライドの枚数（フェーズごとの目安が `20_story.md` にある）
 - 配色・フォント・文字サイズ・余白（テンプレートがあればそれに従い、無ければ既定値）
 - ファイル名と出力先
