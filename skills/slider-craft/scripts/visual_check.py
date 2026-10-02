@@ -44,6 +44,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import checked
 
 TOL = 40.0          # 上下端のずれの許容（px）
+# **接触を重なりとして出さない。**実案件で軸ラベル同士の接触が大量に出た
+MIN_RATIO = 0.25    # 小さい方の面積に対する重なりの比
+COMMON_AT = 3       # この枚数以上に同じ文字が出たら「共通パーツ」とみなす
 _NUM = re.compile(r"(?<![\d.])(\d+(?:\.\d+)?)\s*(%|％|件|円|人|分|台|回|倍)")
 
 
@@ -83,6 +86,15 @@ def boxes(html: Path):
     return out
 
 
+def in_chart(el):
+    """図の中か。**図の中のラベルの接触は、要確認に落とす**（線や目盛と近接するのは普通）。"""
+    for anc in [el] + list(el.iterancestors()):
+        cls = (anc.get("class") or "") + " " + " ".join(anc.keys())
+        if "chart" in cls or "graph" in cls or "axis" in cls:
+            return True
+    return False
+
+
 def overlap(a, b):
     ax, ay, aw, ah = a
     bx, by, bw, bh = b
@@ -109,6 +121,11 @@ def main():
         path = Path(f)
         rows = boxes(path)
         slides = sorted({r[0] for r in rows})
+        # **全枚に出る文字（透かし・ヘッダ・フッタ）は共通パーツ。**
+        # 枚ごとに1件ずつ出すと、本物の指摘が埋もれる
+        common, shared = {}, {}
+        for txt in {r[6] for r in rows if r[6]}:
+            common[txt] = len({r[0] for r in rows if r[6] == txt})
         n_slides += len(slides)
         for no in slides:
             items = [r for r in rows if r[0] == no]
@@ -138,7 +155,18 @@ def main():
                     a, b = texts[i], texts[j]
                     if b[1] in a[1].iterancestors() or a[1] in b[1].iterancestors():
                         continue
-                    if overlap(a[2:6], b[2:6]) > 0:
+                    ov = overlap(a[2:6], b[2:6])
+                    if ov <= 0:
+                        continue
+                    small = min(a[4] * a[5], b[4] * b[5]) or 1
+                    if ov / small < MIN_RATIO:
+                        continue        # 端が触れているだけ
+                    if common.get(a[6], 0) >= COMMON_AT or common.get(b[6], 0) >= COMMON_AT:
+                        shared.setdefault((a[6][:12], b[6][:12]), []).append(no)
+                    elif in_chart(a[1]) or in_chart(b[1]):
+                        notes.append((path.name, no, "図の中で文字が近い（要確認）",
+                                      f"「{a[6][:10]}」と「{b[6][:10]}」"))
+                    else:
                         findings.append((path.name, no, "文字が重なる",
                                          f"「{a[6][:10]}」と「{b[6][:10]}」"))
             # 枠に入らない値（**黙って消えるのが最悪**）
@@ -151,12 +179,17 @@ def main():
             seen = {}
             for r in texts:
                 for m in _NUM.finditer(r[6]):
-                    k = m.group(0).replace(" ", "")
-                    seen[k] = seen.get(k, 0) + 1
-            for k, c in seen.items():
-                if c > 1:
-                    notes.append((path.name, no, "同じ数値が二重（要確認）",
-                                  f"「{k}」が {c} 箇所。**右軸とラベルの二重など**"))
+                    seen.setdefault(m.group(0).replace(" ", ""), []).append(r)
+            for k, rs in seen.items():
+                near = [(a, b) for i, a in enumerate(rs) for b in rs[i + 1:]
+                        if abs(a[2] - b[2]) < 80 and abs(a[3] - b[3]) < 80]
+                if near:
+                    notes.append((path.name, no, "同じ数値が近くに二重（要確認）",
+                                  f"「{k}」。**右軸とラベルの二重など。片方を消す**"))
+
+        for (x, y), nos in shared.items():
+            notes.append((path.name, f"{len(nos)}枚", "共通パーツと重なる（要確認）",
+                          f"「{x}」と「{y}」。**テンプレ側の帯・透かしとの重なり**"))
 
     # 判定表の未確認
     if args.review:

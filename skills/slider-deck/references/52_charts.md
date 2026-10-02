@@ -80,3 +80,39 @@ HTML にこう書いてあれば、**変換器がネイティブのグラフに�
 **作図の線が1本も入っていなければ、変換の不具合を疑う。**
 黙って消える型の事故が実際に起きた（`docs/feedback.md` の原因 C）。
 **本数を数え、スライドの外に出ていないかを見る。**
+
+---
+
+## どこまで確かめてあるか（2026-10-02 時点）
+
+**未検証のまま配ることは避けられないが、何が未検証かは必ず書く。**
+
+| 経路 | 状態 |
+|---|---|
+| HTML → .xlsx | **実案件で通した。**ただし後述の前提が無いと0図になる |
+| `--paste --dry-run`（貼り先の枚数・位置の対応づけ） | **確認済み**（1図・終了0）。Windows は不要 |
+| 非Windows での止まり方 | **確認済み。**「Windows 側で実行する」と案内して終わる。壊れない |
+| `--paste` 本体（Excel と PowerPoint の COM） | **未検証。**Windows の本体が要る。macOS では走らせられない |
+
+### 実案件で0図になった原因 ★
+
+**配布元の HTML に `data-chart` も `data-values` も無かった**（19枚・図186件すべて）。
+図を箱と線で描いてあるため、数が読めない。**この経路は、作る側が数を持たせていないと成立しない。**
+
+| 誰が | 何をする |
+|---|---|
+| 作る側（`slider-craft`） | グラフの枠に **`data-chart`（型）と `data-values`（数）を持たせる** |
+| 変換側（ここ） | それを読んで .xlsx を作る。無ければ**図ごとに「数が読めない」と出し、対象0で異常終了する** |
+
+**対象0のときに「問題なし」と報告しない。**何も見ていない。
+
+### Windows 側で確かめてもらう手順
+
+```bash
+python3 scripts/chart_xlsx.py <HTML> --outdir deck/charts     # .xlsx を作る（どの機械でも）
+python3 scripts/chart_xlsx.py --paste --dry-run deck/charts deck/deck.pptx   # 対応づけを見る
+python3 scripts/chart_xlsx.py --paste deck/charts deck/deck.pptx            # ここだけ Windows
+```
+
+**3行目が通った／通らなかったを、結果とともに台帳へ残す。**
+通らなかったときは、Excel と PowerPoint が起動したか、どのブックで止まったかを添える。
