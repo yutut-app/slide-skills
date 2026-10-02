@@ -175,6 +175,18 @@ def main():
                     findings.append((path.name, no, "枠に値が入らない",
                                      f"高さ {r[5]:.0f}px に {r[7]:.1f}px の「{r[6][:8]}」。"
                                      "**外に出す**"))
+            # グラフなのに数が無い（**後工程で Excel のグラフにできない**）
+            for r in items:
+                el = r[1]
+                cls = (el.get("class") or "")
+                if not ("chart" in cls or "graph" in cls or el.get("data-chart")):
+                    continue
+                if el.get("data-values"):
+                    continue
+                notes.append((path.name, no, "グラフに数が無い（要確認）",
+                              "**`data-chart` と `data-values` を持たせる。**"
+                              "無いと Excel のグラフにできない"))
+
             # 同じ数値の二重（要確認）
             seen = {}
             for r in texts:
