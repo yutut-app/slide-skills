@@ -586,8 +586,12 @@ def add_shape(slide, el, style, rules, inherit, base_dir: Path, warn):
         if p is None:
             warn.append(f"画像が無い: {src}（受け取ったものにも手元のテンプレにも無い）")
             return
-        if where_from == "手元のテンプレ":
-            warn.append(f"画像: {src} は**手元のテンプレから使った**")
+        if where_from and where_from.startswith("手元のテンプレ"):
+            if "中身が違う" in where_from:
+                warn.append(f"画像: {src} は**手元のテンプレを使った。"
+                            f"受け取った写しと中身が違う**（配布元の写しが古い可能性）")
+            else:
+                warn.append(f"画像: {src} は**手元のテンプレから使った**")
         cy = Emu(int((h or w) * EMU_PER_PX))
         slide.shapes.add_picture(str(p), x, y, cx, cy)
         return
@@ -1179,12 +1183,16 @@ def find_image(src, base: Path):
     if p.is_absolute():
         return (p, "指定") if p.exists() else (None, None)
     here = base / p
-    if here.exists():
-        return here, "受け取ったもの"
     for d in IMAGE_DIRS:
         cand = Path(d) / p.name
-        if cand.exists():
-            return cand, "手元のテンプレ"
+        if not cand.exists():
+            continue
+        if here.exists() and here.read_bytes() != cand.read_bytes():
+            # **同名で中身が違う。**案件固有の画像がテンプレと同名のこともある
+            return cand, "手元のテンプレ（受け取ったものと中身が違う）"
+        return cand, "手元のテンプレ"
+    if here.exists():
+        return here, "受け取ったもの"
     return None, None
 
 
