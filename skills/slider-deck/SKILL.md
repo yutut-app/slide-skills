@@ -78,7 +78,7 @@ HTML
 
 | 手段 | 可否 |
 |---|---|
-| ローカルのファイルに書き出す（`deck/`、`work/`、`qa/`） | **よい。**これが既定 |
+| ローカルのファイルに書き出す（`<案件>/out/latest/` の下） | **よい。**これが既定 |
 | 会話の中に文言・構成を書く | よい |
 
 **「利用者に見せる」と「外部に載せる」を混同しない。**
@@ -313,7 +313,7 @@ HTML の絵・pptx の絵・検査が一度に出る。**両方の絵を並べ�
 **位置は、写すか・任せるかを選べる。** ★
 
 ```bash
-python3 scripts/html2pptx.py deck/deck.html -o deck/deck_rev1.pptx
+python3 scripts/html2pptx.py <案件>/out/latest/deck.html -o <案件>/out/latest/deck_rev1.pptx
 ```
 
 | | いつ使うか | 何が起きるか |
@@ -328,11 +328,11 @@ python3 scripts/html2pptx.py deck/deck.html -o deck/deck_rev1.pptx
 字を小さくして収めると、読めない資料が「合格」になる。
 
 **出力の決まり。**利用者から受け取ったファイルは上書きせず、必ず別名で出す。
-ファイル名に日付か版を入れる（`deck/deck_rev<n>.pptx`）。出力先は `deck/` に統一する（単数・複数を混ぜない）。
+ファイル名に日付か版を入れる（`<案件>/out/latest/deck_rev<n>.pptx`）。出力先は `<案件>/out/latest/` に統一する（版はフォルダで分ける）。
 **案内するパスは、実行前に実在を確かめる**（導入形態でパスが変わる）。
 
 ```bash
-python3 scripts/html2pptx.py <作業>/print.html -o deck/deck_rev<n>.pptx
+python3 scripts/html2pptx.py <作業>/print.html -o <案件>/out/latest/deck_rev<n>.pptx
 ```
 
 **出力に出る「換算係数とその出所」を読む。**
@@ -346,8 +346,8 @@ python3 scripts/html2pptx.py <作業>/print.html -o deck/deck_rev<n>.pptx
 `references/60_qa.md` に従う。**3つとも回す。1つでも欠けたら「検査した」と書かない。**
 
 ```bash
-python3 scripts/qa_render.py deck/deck_rev<n>.pptx
-python3 scripts/fit_check.py check deck/deck_rev<n>.pptx
+python3 scripts/qa_render.py <案件>/out/latest/deck_rev<n>.pptx
+python3 scripts/fit_check.py check <案件>/out/latest/deck_rev<n>.pptx
 python3 scripts/html_png.py <作業>/print.html
 ```
 
@@ -360,7 +360,7 @@ python3 scripts/html_png.py <作業>/print.html
 **絵で違和感があるのに原因が分からないときは、中身を要約する。**
 
 ```bash
-python3 scripts/probe_pptx.py deck/deck_rev<n>.pptx
+python3 scripts/probe_pptx.py <案件>/out/latest/deck_rev<n>.pptx
 ```
 
 書体・文字サイズ・枠の自動拡張・表の余白が1つの表で出る。
@@ -392,7 +392,7 @@ PowerPoint は**行の高さを、中の文字に合わせて勝手に伸ばす�
 **直すのは HTML。** 何をどう直したかを、スライド番号付きで出す。
 
 ```bash
-python3 scripts/diff_slides.py deck/deck_rev<n-1>.pptx deck/deck_rev<n>.pptx
+python3 scripts/diff_slides.py <案件>/out/latest/deck_rev<n-1>.pptx <案件>/out/latest/deck_rev<n>.pptx
 ```
 
 **直したら手順2に戻る。** 変換し直して、もう一度検査する。

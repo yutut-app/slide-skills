@@ -8,13 +8,13 @@
 
 ```bash
 # 1. HTML の図から .xlsx を起こす（どの環境でも動く）
-python3 scripts/chart_xlsx.py deck/deck.html -o deck/charts
+python3 scripts/chart_xlsx.py <案件>/out/latest/deck.html -o <案件>/out/latest/charts
 
 # 2. 貼る前に、対応づけを確かめる（**どの環境でも動く**）
-python3 scripts/chart_xlsx.py --paste --dry-run deck/charts deck/deck_rev1.pptx
+python3 scripts/chart_xlsx.py --paste --dry-run <案件>/out/latest/charts <案件>/out/latest/deck_rev1.pptx
 
 # 3. Excel のグラフを pptx に貼る（**Windows + Excel + PowerPoint**）
-python3 scripts/chart_xlsx.py --paste deck/charts deck/deck_rev1.pptx
+python3 scripts/chart_xlsx.py --paste <案件>/out/latest/charts <案件>/out/latest/deck_rev1.pptx
 ```
 
 貼る位置は `geometry.json` に控えてある（元の図の座標）。
@@ -109,9 +109,9 @@ HTML にこう書いてあれば、**変換器がネイティブのグラフに�
 ### Windows 側で確かめてもらう手順
 
 ```bash
-python3 scripts/chart_xlsx.py <HTML> --outdir deck/charts     # .xlsx を作る（どの機械でも）
-python3 scripts/chart_xlsx.py --paste --dry-run deck/charts deck/deck.pptx   # 対応づけを見る
-python3 scripts/chart_xlsx.py --paste deck/charts deck/deck.pptx            # ここだけ Windows
+python3 scripts/chart_xlsx.py <HTML> --outdir <案件>/out/latest/charts     # .xlsx を作る（どの機械でも）
+python3 scripts/chart_xlsx.py --paste --dry-run <案件>/out/latest/charts <案件>/out/latest/deck.pptx   # 対応づけを見る
+python3 scripts/chart_xlsx.py --paste <案件>/out/latest/charts <案件>/out/latest/deck.pptx            # ここだけ Windows
 ```
 
 **3行目が通った／通らなかったを、結果とともに台帳へ残す。**

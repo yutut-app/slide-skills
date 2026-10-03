@@ -45,7 +45,7 @@ python3 scripts/qa_render.py --probe
 
 ```bash
 # 貼られた中身を保存する。**ここから先は、いつもの手順と同じ**
-cat > deck/deck.html <<'EOF'
+cat > <案件>/out/latest/deck.html <<'EOF'
 （貼られた HTML をそのまま）
 EOF
 ```

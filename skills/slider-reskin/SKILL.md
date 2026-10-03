@@ -71,7 +71,7 @@ pptx は HTML から変換して作る派生物で、**手で直しても次の�
 
 | 手段 | 可否 |
 |---|---|
-| ローカルのファイルに書き出す（`deck/`、`work/`、`qa/`） | **よい。**これが既定 |
+| ローカルのファイルに書き出す（`<案件>/out/latest/` の下） | **よい。**これが既定 |
 | `SendUserFile` で利用者本人に渡す | **よい。**利用者の端末に渡すだけで、公開ではない |
 | 会話の中に文言・構成を書く | よい |
 
@@ -184,9 +184,9 @@ python3 scripts/reskin_html.py <作業ディレクトリ> --to <名前> -o <出�
 
 ```bash
 python3 skills/slider-deck/scripts/html_png.py <出力>/print.html
-python3 skills/slider-deck/scripts/html2pptx.py <出力>/print.html -o deck/deck.pptx
-python3 skills/slider-deck/scripts/fit_check.py deck/deck.pptx
-python3 skills/slider-deck/scripts/qa_render.py deck/deck.pptx
+python3 skills/slider-deck/scripts/html2pptx.py <出力>/print.html -o <案件>/out/latest/deck.pptx
+python3 skills/slider-deck/scripts/fit_check.py <案件>/out/latest/deck.pptx
+python3 skills/slider-deck/scripts/qa_render.py <案件>/out/latest/deck.pptx
 ```
 
 **画像を1枚ずつ実際に見る。** 生成できたことは、正しさの証拠にならない。

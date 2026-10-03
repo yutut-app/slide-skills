@@ -95,7 +95,7 @@
 5. **台帳で照合する。古い値が0件になったことを機械で確かめてから報告する**
 
 ```bash
-python3 scripts/ledger_check.py work/*.html --numbers numbers.md --terms terms.md
+python3 scripts/ledger_check.py <案件>/work/*.html --numbers numbers.md --terms terms.md
 ```
 
 **数値は置換で変えない。**同じ数字が別の項目にも出る（「62%」が上位項目の割合にも、

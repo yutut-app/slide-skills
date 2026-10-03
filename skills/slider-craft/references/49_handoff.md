@@ -65,8 +65,8 @@
 **メモに正本の指紋を書き、渡す前に今の正本と比べる。**機械で分かる。
 
 ```bash
-python3 scripts/handoff.py <テンプレ> --source work/*.html -o handoff/HANDOFF.md   # 書くとき
-python3 scripts/handoff.py <テンプレ> --stale handoff/HANDOFF.md --source work/*.html  # 渡す前
+python3 scripts/handoff.py <テンプレ> --source <案件>/work/*.html -o <案件>/out/latest/HANDOFF.md   # 書くとき
+python3 scripts/handoff.py <テンプレ> --stale <案件>/out/latest/HANDOFF.md --source <案件>/work/*.html  # 渡す前
 ```
 
 **違えば異常終了する。**そのまま渡さず、今の正本から一式を書き出し直す。
@@ -84,7 +84,7 @@ python3 scripts/handoff.py <テンプレ> --stale handoff/HANDOFF.md --source wo
 **正本が消えたときに、作り直しに頼らない。**版を上げる直前に、今の正本を写しておく。
 
 ```bash
-python3 scripts/handoff.py <テンプレ> --source work/*.html --snapshot
+python3 scripts/handoff.py <テンプレ> --source <案件>/work/*.html --snapshot
 # → snapshots/<日付>_<正本の指紋>/ に写す
 ```
 
@@ -102,7 +102,7 @@ python3 scripts/handoff.py <テンプレ> --source work/*.html --snapshot
 
 ### 自分用の続きメモと、相手に渡すメモは別物 ★
 
-| | 自分用の続きメモ | 相手に渡すメモ（`handoff/HANDOFF.md`） |
+| | 自分用の続きメモ | 相手に渡すメモ（`<案件>/out/latest/HANDOFF.md`） |
 |---|---|---|
 | 読む人 | 次の自分・同じ案件の続き | 受け取る人 |
 | 書くこと | 作業の途中経過・試したこと・次の一手 | 渡した時点の事実（版・指紋・未決・触っていないもの） |
@@ -285,7 +285,7 @@ git -C <slide-skills> log -1 --format=%h
 ## 正本を作る手順（再現の手順）
 | 順 | コマンド | 何が変わるか | 正本を上書きするか |
 |---|---|---|---|
-| 1 | `python3 build.py` | work/*.html を作る | **する** |
+| 1 | `python3 build.py` | <案件>/work/*.html を作る | **する** |
 **正本を上書きするスクリプトは必ず書く。**続きから入る人が、黙って直した内容を消す。
 
 ## 直近で直したこと
@@ -334,8 +334,8 @@ terms.md（用語）／numbers.md（数値）
 
 ```bash
 python3 scripts/html_png.py <受け取った>/print.html
-python3 skills/slider-deck/scripts/html2pptx.py <受け取った>/print.html -o deck/deck_rev<n>.pptx
-python3 skills/slider-deck/scripts/qa_render.py deck/deck_rev<n>.pptx
+python3 skills/slider-deck/scripts/html2pptx.py <受け取った>/print.html -o <案件>/out/latest/deck_rev<n>.pptx
+python3 skills/slider-deck/scripts/qa_render.py <案件>/out/latest/deck_rev<n>.pptx
 ```
 
 **同じ HTML でも、相手の環境とは絵が違う。** フォントが違えば折り返しが変わる。

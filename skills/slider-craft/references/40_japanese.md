@@ -245,7 +245,7 @@ grep -nE "である|と考えられる|が求められる|において|最適な
 | ここでは | 別の場所で違うことを言った経緯がある |
 | 前回、改めて、再度 | 前の版・前の説明を前提にしている |
 
-**機械でも拾える。**`python3 scripts/ledger_check.py work/*.html --history` で一覧が出る。
+**機械でも拾える。**`python3 scripts/ledger_check.py <案件>/work/*.html --history` で一覧が出る。
 
 ### 作り手の作法と、聞き手に伝える内容を分ける
 

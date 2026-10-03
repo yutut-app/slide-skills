@@ -71,7 +71,7 @@ metadata:
 
 | 手段 | 可否 |
 |---|---|
-| ローカルのファイルに書き出す（`deck/`、`work/`、`qa/`） | **よい。**これが既定 |
+| ローカルのファイルに書き出す（`<案件>/out/latest/` の下） | **よい。**これが既定 |
 | 会話の中に文言・構成を書く | よい |
 
 **「利用者に見せる」と「外部に載せる」を混同しない。**
@@ -143,7 +143,7 @@ metadata:
 
 | 確認すること | 無いときの動き |
 |---|---|
-| 出力先ディレクトリ | 利用者に確認せず `deck/` を作り、理由を1行述べる |
+| 出力先ディレクトリ | 利用者に確認せず `<案件>/out/latest/` を作り、理由を1行述べる |
 | 資料テンプレート（リポジトリ直下 `assets/templates/deck/`） | **あればそれに従う。**無ければ既定の配色規約で作る。**勝手にテンプレートを探しに行かない**。テンプレートには2つの形があり、**扱いが違う**（下表） |
 | `python-pptx` / `openpyxl` | `python3 -m pip install python-pptx openpyxl` |
 | 画像化の手段 | `python3 skills/slider-deck/scripts/qa_render.py --probe` で確認する。**Windows は PowerPoint COM に自動で切り替わる。**どちらも無ければ手順5で目視を依頼し、**検査していないと明記する** |
@@ -256,10 +256,10 @@ python3 skills/slider-deck/scripts/fit_check.py budget --template <テンプレ>
 # A. HTML 一式のテンプレート（template-manifest.md がある）← まずこれを探す
 #    手順0で選んだテンプレートから、種別ごとの HTML をコピーし、
 #    **座標・サイズ・書体は変えずに文字だけ差し替える**
-cp assets/templates/deck/<選んだテンプレ>/003.html work/p01.html
+cp assets/templates/deck/<選んだテンプレ>/003.html <案件>/work/p01.html
 
 # B. pptx テンプレート
-python3 scripts/make_html.py --template <テンプレ>.pptx --outline outline.md -o work/deck.html
+python3 scripts/make_html.py --template <テンプレ>.pptx --outline outline.md -o <案件>/work/deck.html
 ```
 
 **ファイル名はテンプレートのものを引き継ぐ**（`003.html` → `p03.html` ではなく
@@ -276,7 +276,7 @@ python3 scripts/make_html.py --template <テンプレ>.pptx --outline outline.md
 **見るのは HTML の絵。** pptx の検査は `slider-deck` の仕事。
 
 ```bash
-python3 scripts/html_png.py work/*.html
+python3 scripts/html_png.py <案件>/work/*.html
 ```
 
 **往復は2つの段階に分かれる**（`48_html.md`）。段階で見るものが変わる。
@@ -323,7 +323,7 @@ python3 scripts/html_png.py work/*.html
 **機械で見られるものは機械で見て、残りは報告の欄で必ず答える。**
 
 ```bash
-python3 scripts/ledger_check.py work/*.html --terms terms.md --numbers numbers.md --history --ml
+python3 scripts/ledger_check.py <案件>/work/*.html --terms terms.md --numbers numbers.md --history --ml
 ```
 
 **報告に必ず入れる表。空欄を残さない。「該当なし」も書く。**
@@ -355,7 +355,7 @@ python3 scripts/ledger_check.py work/*.html --terms terms.md --numbers numbers.m
 **同じものを見ていないので、「ここ」「大きい」「寄っている」は HTML からは分からない。**
 
 ```bash
-python3 scripts/html_png.py work/*.html   # 利用者が見たのと同じ絵
+python3 scripts/html_png.py <案件>/work/*.html   # 利用者が見たのと同じ絵
 ```
 
 絵を見て、**どこを指しているかと、直した後どうなるかを述べてから直す。**

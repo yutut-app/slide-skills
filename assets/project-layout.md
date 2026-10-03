@@ -33,7 +33,7 @@
     latest/          **いま作業している版。見るのは常にここ**
       deck.html  deck.pptx  charts/  qa/  visual-review.md  checks.log
     v01/  v02/       **外に出した版だけ**を写して残す
-  work/              中間。消してよい
+  <案件>/work/              中間。消してよい
 ```
 
 | 決めごと | 外したときに起きたこと |
@@ -41,7 +41,7 @@
 | **中の名前は版に依らず固定**（`deck.pptx` は常に `deck.pptx`） | 版が名前に入り、参照と報告が毎回変わった |
 | **日時を名前に入れない。**日付は `project.md` の履歴へ | `…_20260914-1649.pptx` を後から探せない |
 | **版を増やすのは外に出すときだけ**（`latest` を `vNN` へ写す） | 途中の試行で版が増え、どれが正か分からなくなった |
-| **用途ごとに1つ**（`qa/` は1つだけ） | 同じ用途が5通りに分かれた |
+| **用途ごとに1つ**（`<案件>/out/latest/` は1つだけ） | 同じ用途が5通りに分かれた |
 | **リンクを使わない**（`latest` は実体のフォルダ） | 配布先の環境でリンクが作れないことがある |
 
 **2案を並べて作るときだけ例外。**`out/latest-a/` `out/latest-b/` のように用途を名前に出し、
@@ -53,10 +53,10 @@
 
 | 道具 | 既定の出力先 |
 |---|---|
-| 画像化（`qa_render.py` / `html_png.py`） | `out/latest/qa` |
-| グラフの xlsx（`chart_xlsx.py`） | `out/latest/charts` |
-| 前処理（`stage0.py`） | `work/stage0` |
-| 検査の記録 | `out/latest/checks.log` |
+| 画像化（`qa_render.py` / `html_png.py`） | `<案件>/out/latest/qa` |
+| グラフの xlsx（`chart_xlsx.py`） | `<案件>/out/latest/charts` |
+| 前処理（`stage0.py`） | `<案件>/work/stage0` |
+| 検査の記録 | `<案件>/out/latest/checks.log` |
 
 **案件ルートの決め方。**`--project <dir>` が最優先。無ければ、入力のあるところから
 **上に辿って `project.md` のある階層**を案件ルートとする。見つからなければ**今いる場所**。
@@ -68,7 +68,7 @@
 python3 skills/slider-deck/scripts/layout_check.py <案件>
 ```
 
-案件直下に決めた以外のフォルダが無いか、`out/latest/` が揃っているか、
+案件直下に決めた以外のフォルダが無いか、`<案件>/out/latest/` が揃っているか、
 **日時入りの名前**が無いか、**同じ用途の別名**（`qa` と `qa_html` の並立）が無いかを見る。
 **指摘があれば異常終了する。**
 
@@ -76,7 +76,7 @@ python3 skills/slider-deck/scripts/layout_check.py <案件>
 
 **外に出すとき（提出・配布・引き渡し）だけ。**
 
-1. `out/latest/` の検査を通す
+1. `<案件>/out/latest/` の検査を通す
 2. `out/vNN/` へ**写す**（移動ではない。`latest` は作業の場として残す）
 3. `project.md` の履歴に1行書く（日付・版・何を変えたか・誰に出したか）
 

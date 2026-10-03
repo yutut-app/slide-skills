@@ -50,8 +50,8 @@ HTML から始まる仕事では、元の pptx は存在しない。
 テンプレートが `.pptx` のときだけ、編集用の HTML を起こす。
 
 ```bash
-python3 scripts/make_html.py --template <テンプレ>.pptx -o work/deck.html
-python3 scripts/make_html.py --template <テンプレ>.pptx --outline outline.md -o work/deck.html
+python3 scripts/make_html.py --template <テンプレ>.pptx -o <案件>/work/deck.html
+python3 scripts/make_html.py --template <テンプレ>.pptx --outline outline.md -o <案件>/work/deck.html
 ```
 
 `--outline` は1行1要素の素案。手順2で作った骨子をそのまま流し込める。
@@ -172,7 +172,7 @@ python3 -m http.server 8765 --bind 127.0.0.1 --directory <HTMLのある場所>
 ### 段階0 を飛ばさない
 
 ```bash
-python3 skills/slider-deck/scripts/stage0.py <テンプレ>/003.html -o work/stage0
+python3 skills/slider-deck/scripts/stage0.py <テンプレ>/003.html -o <案件>/work/stage0
 ```
 
 1コマンドで、HTML の絵・pptx・pptx の絵・レイアウト検査を出す。
@@ -247,7 +247,7 @@ python3 skills/slider-deck/scripts/stage0.py <テンプレ>/003.html -o work/sta
 どこを指しているかと、直した後どうなるかを述べてから直す。
 
 ```bash
-python3 scripts/html_png.py work/*.html    # 利用者が見たのと同じ絵
+python3 scripts/html_png.py <案件>/work/*.html    # 利用者が見たのと同じ絵
 ```
 
 **推測で直さない。** 絵を見ずに直すと、別の箇所を直して「直しました」と言うことになる。
@@ -258,7 +258,7 @@ python3 scripts/html_png.py work/*.html    # 利用者が見たのと同じ絵
 **既定は HTML の絵。** 利用者が見たのは HTML であり、指示の出どころがそこだから。
 
 ```bash
-python3 scripts/html_png.py work/*.html      # 既定。毎回これ
+python3 scripts/html_png.py <案件>/work/*.html      # 既定。毎回これ
 ```
 
 **pptx の絵は、既定では使わない。** 指定の書体が実行環境に無いと
@@ -276,9 +276,9 @@ LibreOffice が別の書体に置き換え、**折り返し位置が変わる。
 | 利用者に渡す前（最終） | 渡すのは pptx。見ずに渡さない |
 
 ```bash
-python3 skills/slider-deck/scripts/html2pptx.py work/*.html -o deck/deck_rev<n>.pptx
-python3 skills/slider-deck/scripts/qa_render.py deck/deck_rev<n>.pptx
-python3 skills/slider-deck/scripts/fit_check.py check deck/deck_rev<n>.pptx
+python3 skills/slider-deck/scripts/html2pptx.py <案件>/work/*.html -o <案件>/out/latest/deck_rev<n>.pptx
+python3 skills/slider-deck/scripts/qa_render.py <案件>/out/latest/deck_rev<n>.pptx
+python3 skills/slider-deck/scripts/fit_check.py check <案件>/out/latest/deck_rev<n>.pptx
 ```
 
 **出したら HTML の絵と並べて、ずれを探す。** 片方だけでは出ない。
@@ -300,7 +300,7 @@ python3 skills/slider-deck/scripts/qa_render.py --probe
 **区切りごとに版を残す。** 出力は毎回別名にし、前の版と比べられるようにする。
 
 ```bash
-python3 skills/slider-deck/scripts/diff_slides.py deck/deck_rev1.pptx deck/deck_rev2.pptx
+python3 skills/slider-deck/scripts/diff_slides.py <案件>/out/latest/deck_rev1.pptx <案件>/out/latest/deck_rev2.pptx
 ```
 
 **重なり・はみ出し・溢れはゼロになるまで回す。**回数で打ち切らない
@@ -329,10 +329,10 @@ python3 skills/slider-deck/scripts/diff_slides.py deck/deck_rev1.pptx deck/deck_
 
 ```bash
 # print.html を渡すと、中の iframe の並びをそのまま使う
-python3 skills/slider-deck/scripts/html2pptx.py <テンプレ>/print.html -o deck/deck.pptx
+python3 skills/slider-deck/scripts/html2pptx.py <テンプレ>/print.html -o <案件>/out/latest/deck.pptx
 
 # ファイルを個別に、順番に渡してもよい
-python3 skills/slider-deck/scripts/html2pptx.py 001.html 003.html 003.html 004.html -o deck/deck.pptx
+python3 skills/slider-deck/scripts/html2pptx.py 001.html 003.html 003.html 004.html -o <案件>/out/latest/deck.pptx
 ```
 
 **テンプレートの .pptx は要らない。** HTML に書かれた座標をそのまま写す。

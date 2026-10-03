@@ -99,8 +99,8 @@
 ## 6. 検査
 
 ```bash
-python3 scripts/visual_check.py work/*.html \
-    --manifest <テンプレの manifest> --review work/visual-review.md
+python3 scripts/visual_check.py <案件>/work/*.html \
+    --manifest <テンプレの manifest> --review <案件>/work/visual-review.md
 ```
 
 **絵を人に見せる前に通す。**上下端・文字サイズ・文字の重なり・枠に入らない値・

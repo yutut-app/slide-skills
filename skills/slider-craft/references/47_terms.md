@@ -49,7 +49,7 @@
 | 渡すとき | **台帳を引き継ぎ一式に含める**（`49_handoff.md`）。受け取った側も同じ語で直せる |
 
 ```bash
-python3 scripts/ledger_check.py work/*.html --terms terms.md --numbers numbers.md
+python3 scripts/ledger_check.py <案件>/work/*.html --terms terms.md --numbers numbers.md
 ```
 
 **0件でなければ報告しない。**残っている枚と語が一覧で出る。
@@ -75,7 +75,7 @@ python3 scripts/ledger_check.py work/*.html --terms terms.md --numbers numbers.m
 **ここに同じ表を作らない。**片方だけ更新されて食い違う。
 
 ```bash
-python3 scripts/ledger_check.py work/*.html --terms ../slider-script/assets/phrases.md
+python3 scripts/ledger_check.py <案件>/work/*.html --terms ../slider-script/assets/phrases.md
 ```
 
 案件固有の語は、その台帳をコピーして案件側に置き、コピーの方を渡す。

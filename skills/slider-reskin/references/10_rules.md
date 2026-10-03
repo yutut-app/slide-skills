@@ -86,9 +86,9 @@ python3 scripts/reskin_html.py <作業ディレクトリ> --to <テンプレ名>
 
 ```bash
 python3 skills/slider-deck/scripts/html_png.py <出力先>/print.html
-python3 skills/slider-deck/scripts/html2pptx.py <出力先>/print.html -o deck/deck.pptx
-python3 skills/slider-deck/scripts/fit_check.py deck/deck.pptx
-python3 skills/slider-deck/scripts/qa_render.py deck/deck.pptx
+python3 skills/slider-deck/scripts/html2pptx.py <出力先>/print.html -o <案件>/out/latest/deck.pptx
+python3 skills/slider-deck/scripts/fit_check.py <案件>/out/latest/deck.pptx
+python3 skills/slider-deck/scripts/qa_render.py <案件>/out/latest/deck.pptx
 ```
 
 **溢れが出たら直すのは HTML。** pptx を手で直さない。
