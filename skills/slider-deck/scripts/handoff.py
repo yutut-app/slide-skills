@@ -201,7 +201,8 @@ def check_contents(profile: str, files, warn):
     print("| 中身 | 件数 |")
     print("|---|---|")
     print(f"| スライドの HTML | {len(pages)} |")
-    print(f"| print.html | {'1' if 'print.html' in names else '**無い**'} |")
+    if len(pages) > 1 or "print.html" in names:
+        print(f"| print.html | {'1' if 'print.html' in names else '**無い**'} |")
     print(f"| その他のファイル | {len(names) - len(pages) - (1 if 'print.html' in names else 0)} |")
     return len(missing) + len(extra)
 
@@ -238,6 +239,9 @@ def main():
                                len(args.source), "ファイル", n,
                                {"宛先": args.profile,
                                 "表": "assets/handoff-contents.md"})
+        if not args.out:
+            # **検査だけのモード。**雛形を書き出したいときは --for を外す
+            return code or (1 if n else 0)
         if n:
             return code or 1
 
