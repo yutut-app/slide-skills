@@ -138,8 +138,9 @@ def main():
                     findings.append((path.name, no, "本文の上端がずれる",
                                      f"{t:.0f}px / 基準 {top_ref:.0f}px"))
             if bot_ref is not None and body:
-                b = max((r[3] + (r[5] or 0)) for r in body if r[3] < bot_ref)
-                if abs(b - bot_ref) > TOL:
+                below = [r[3] + (r[5] or 0) for r in body if r[3] < bot_ref]
+                b = max(below) if below else None
+                if b is not None and abs(b - bot_ref) > TOL:
                     findings.append((path.name, no, "本文の下端がずれる",
                                      f"{b:.0f}px / 基準 {bot_ref:.0f}px。**下の空きが揃わない**"))
             # 文字の大きさ
