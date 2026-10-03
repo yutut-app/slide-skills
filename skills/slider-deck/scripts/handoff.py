@@ -157,6 +157,53 @@ TEMPLATE = """# 引き継ぎ
 """
 
 
+
+# 宛先ごとに、何が必須で何を渡さないか。
+# **正本は `assets/handoff-contents.md`。**ここは機械が判定するための写しで、
+# 表を直したらこちらも直す（2か所にあるが、片方は人が読む・片方は機械が読む）
+PROFILES = {
+    "deck": {
+        "必須": ["スライドの HTML", "HANDOFF.md"],
+        "渡さない": ["terms.md", "numbers.md", "visual-review.md", "script.md",
+                   "feedback.md", "pace.md", "template-baselines.md"],
+    },
+    "reskin": {
+        "必須": ["スライドの HTML", "HANDOFF.md"],
+        "渡さない": ["terms.md", "numbers.md", "visual-review.md", "script.md",
+                   "feedback.md", "pace.md", "template-baselines.md"],
+    },
+    "script": {
+        "必須": ["スライドの HTML", "HANDOFF.md"],
+        "渡さない": ["visual-review.md", "feedback.md", "pace.md",
+                   "template-baselines.md"],
+    },
+}
+
+
+def check_contents(profile: str, files, warn):
+    """渡す一式の中身を宛先の表に照らす。**必須の欠けは異常終了。**"""
+    spec = PROFILES[profile]
+    names = [Path(f).name for f in files]
+    pages = [n for n in names if n.endswith(".html") and n != "print.html"]
+    missing = []
+    if not pages:
+        missing.append("スライドの HTML")
+    if len(pages) > 1 and "print.html" not in names:
+        missing.append("print.html（枚が分かれているときは連結したものも渡す）")
+    extra = [n for n in names if n in spec["渡さない"]]
+    for m in missing:
+        warn.append(f"**{m} が無い。**{profile} はこれが無いと作業できない")
+    for x in extra:
+        warn.append(f"**{x} は {profile} に渡さない。**担当外のものを混ぜると、"
+                    "受け取る側が直す場所を間違える")
+    print(f"\n渡す一式（宛先 {profile}）\n")
+    print("| 中身 | 件数 |")
+    print("|---|---|")
+    print(f"| スライドの HTML | {len(pages)} |")
+    print(f"| print.html | {'1' if 'print.html' in names else '**無い**'} |")
+    print(f"| その他のファイル | {len(names) - len(pages) - (1 if 'print.html' in names else 0)} |")
+    return len(missing) + len(extra)
+
 def main():
     ap = argparse.ArgumentParser(description="引き継ぎメモの雛形を作る。始める前の版の突き合わせと、返すときのメモ")
     ap.add_argument("template", help="テンプレートのディレクトリ")
@@ -174,7 +221,24 @@ def main():
     ap.add_argument("--snapshot", action="store_true",
                     help="**版を上げる前に、今の正本を退避する。**"
                          "snapshots/<日付>_<正本の指紋>/ に写す。`--source` と一緒に使う")
+    ap.add_argument("--for", dest="profile", choices=sorted(PROFILES),
+                    help="渡す宛先。**必須の欠けと、渡さないものの混入を見る**"
+                         "（表は assets/handoff-contents.md）")
     args = ap.parse_args()
+
+    if args.profile:
+        if not args.source:
+            sys.exit("--for には --source（渡すもの）が要る")
+        warn = []
+        n = check_contents(args.profile, args.source, warn)
+        for w in warn:
+            print(f"- {w}")
+        code = checked.summary(f"handoff --for {args.profile}",
+                               len(args.source), "ファイル", n,
+                               {"宛先": args.profile,
+                                "表": "assets/handoff-contents.md"})
+        if n:
+            return code or 1
 
     if args.snapshot:
         # **正本が消えたときに、作り直しに頼らない**
