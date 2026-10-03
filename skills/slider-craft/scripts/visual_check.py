@@ -142,7 +142,7 @@ def main():
     top_ref, bot_ref = man.get("body-top"), man.get("body-bottom")
     min_font = man.get("min-font")
 
-    findings, notes, n_slides = [], [], 0
+    findings, notes, n_slides, skipped = [], [], 0, []
     for f in args.html:
         path = Path(f)
         rows = boxes(path)
@@ -156,8 +156,12 @@ def main():
         for no in slides:
             items = [r for r in rows if r[0] == no]
             body = [r for r in items
-                    if top_ref is None or r[3] >= top_ref - TOL]
-            # 上端・下端が全枚でそろうか
+                    if (top_ref is None or r[3] >= top_ref - TOL)
+                    and (bot_ref is None or r[3] < bot_ref + TOL)
+                    and r[6] and common.get(r[6], 0) < COMMON_AT]
+            # 上端・下端が全枚でそろうか。**本文の無い枚は対象外**
+            if not body:
+                skipped.append(no)
             if top_ref is not None and body:
                 t = min(r[3] for r in body)
                 if abs(t - top_ref) > TOL:
@@ -254,6 +258,7 @@ def main():
                   else "**渡されていない（上下端と文字サイズは見ていない）**",
         "判定表": Path(args.review).name if args.review else "**渡されていない**",
         "許容": f"上下端 ±{TOL:.0f}px",
+        "上下端の対象外": f"{len(skipped)} 枚（本文が無い枚）",
         "要確認": f"{len(notes)} 件",
     })
     return code or (1 if findings else 0)
