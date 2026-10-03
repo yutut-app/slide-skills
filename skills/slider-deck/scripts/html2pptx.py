@@ -289,9 +289,10 @@ def add_table(slide, area, header, rows, ea, latin):
 
 
 def add_image(slide, area, path: Path, base: Path):
-    p = path if path.is_absolute() else (base / path)
-    if not p.exists():
-        return f"画像が見つからない: {p}"
+    from html_abs import find_image
+    p, where_from = find_image(str(path), base)
+    if p is None:
+        return f"画像が見つからない: {path}（受け取ったものにも手元のテンプレにも無い）"
     x, y, w, h = area
     pic = slide.shapes.add_picture(str(p), x, y, height=h)
     if pic.width > w:      # 幅がはみ出すなら幅基準に入れ直す
@@ -323,6 +324,8 @@ def build(html_path: Path, template: Path, out: Path):
     kinds = classify_layouts(prs)
     ea, latin = theme_fonts(prs)
     base = html_path.resolve().parent
+    from html_abs import load_image_dirs
+    dirs = load_image_dirs([str(html_path)])   # **手元のテンプレの images/ を積む**
     report, warn = [], []
 
     for i, s in enumerate(slides, 1):
@@ -483,6 +486,7 @@ def build_absolute(files, out: Path, px_per_pt=None, relayout=False):
     import html_abs as HA
     from pptx import Presentation as _P
 
+    HA.load_image_dirs(files)      # 手元のテンプレの images/ を探索先に積む
     scale, src = HA.apply_scale_from(files, px_per_pt)
 
     prs = _P()

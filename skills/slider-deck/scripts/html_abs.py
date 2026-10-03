@@ -582,11 +582,12 @@ def add_shape(slide, el, style, rules, inherit, base_dir: Path, warn):
     # 画像
     if el.tag == "img":
         src = el.get("src") or ""
-        p = Path(src)
-        p = p if p.is_absolute() else (base_dir / p)
-        if not p.exists():
-            warn.append(f"画像が無い: {src}")
+        p, where_from = find_image(src, base_dir)
+        if p is None:
+            warn.append(f"画像が無い: {src}（受け取ったものにも手元のテンプレにも無い）")
             return
+        if where_from == "手元のテンプレ":
+            warn.append(f"画像: {src} は**手元のテンプレから使った**")
         cy = Emu(int((h or w) * EMU_PER_PX))
         slide.shapes.add_picture(str(p), x, y, cx, cy)
         return
@@ -1144,6 +1145,47 @@ def background_color(style):
                 "repeat", "no-repeat", "center", "cover", "contain", "fixed"):
         return None
     return m.group(0)
+
+
+# 画像の探し方。**ロゴなどテンプレート由来の画像は、手元のテンプレートのものを使う。**
+# 配布元から送られてこない前提にする（送るのは案件固有の写真・図だけ）。
+# 以前は受け取った HTML の隣だけを見ており、**ロゴが抜けた pptx ができた。**
+IMAGE_DIRS = []          # 手元のテンプレートの images/ を後から足す
+
+
+def load_image_dirs(files=(), extra=None):
+    """手元のテンプレートの `images/` を探索先に積む。**呼ばないと積まれない。**
+
+    `files` は探す起点（変換する HTML）。環境変数 `SLIDE_TEMPLATE_DIR` も見る。
+    """
+    IMAGE_DIRS.clear()
+    if extra:
+        IMAGE_DIRS.append(str(Path(extra).expanduser().resolve()))
+    for man in template_manifests(list(files) or [str(Path.cwd() / "x.html")]):
+        d = Path(man).parent / "images"
+        if d.is_dir():
+            IMAGE_DIRS.append(str(d))
+    return list(IMAGE_DIRS)
+
+
+def find_image(src, base: Path):
+    """(見つかったパス, 使った場所) を返す。**両方にあればテンプレートを優先しない。**
+
+    1 受け取った HTML と同じ場所（案件固有の写真・図）
+    2 手元のテンプレートの `images/`（ロゴ・共通素材）
+    3 どちらにも無ければ None（**勝手な代替を置かない**）
+    """
+    p = Path(src)
+    if p.is_absolute():
+        return (p, "指定") if p.exists() else (None, None)
+    here = base / p
+    if here.exists():
+        return here, "受け取ったもの"
+    for d in IMAGE_DIRS:
+        cand = Path(d) / p.name
+        if cand.exists():
+            return cand, "手元のテンプレ"
+    return None, None
 
 
 def build_slide(prs, doc, base_dir: Path, warn, relayout=False):
