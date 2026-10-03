@@ -50,16 +50,35 @@ COMMON_AT = 3       # この枚数以上に同じ文字が出たら「共通パ�
 _NUM = re.compile(r"(?<![\d.])(\d+(?:\.\d+)?)\s*(%|％|件|円|人|分|台|回|倍)")
 
 
-def manifest_of(path: Path):
-    """`key: value` を拾う。**無い鍵は見ない**（勝手な既定値を置かない）。"""
-    out = {}
+def manifest_of(path: Path, template: str = None):
+    """`鍵: 値` または `| 鍵 | 値 |` を拾う。**無い鍵は見ない**（勝手な既定値を置かない）。
+
+    正本（`data/template-baselines.md`）は**テンプレートごとの節**を持つ。
+    `## <テンプレート名>` で区切り、`--template` で選ぶ。
+
+    **数値を持つ節が2つ以上あって選ばれていないときは、読まずに知らせる。**
+    鍵の名前が同じなので、黙って後の節で上書きすると**別のテンプレの値で判定する。**
+    """
     if not path or not path.exists():
-        return out
+        return {}
+    sections, cur = {}, ""
     for line in path.read_text(encoding="utf-8").splitlines():
+        h = re.match(r"^##\s+(\S+)", line)
+        if h:
+            cur = h.group(1)
+            continue
         m = re.match(r"^\s*\|?\s*([a-z-]+)\s*[:|]\s*([\d.]+)", line)
         if m:
-            out[m.group(1)] = float(m.group(2))
-    return out
+            sections.setdefault(cur, {})[m.group(1)] = float(m.group(2))
+    if template:
+        if template not in sections:
+            raise LookupError(f"`{template}` の節が無い（在る節: "
+                              f"{', '.join(sections) or 'なし'}）")
+        return sections[template]
+    filled = [k for k, v in sections.items() if v]
+    if len(filled) > 1:
+        raise LookupError(f"**節が複数ある。`--template` で選ぶ**（{', '.join(filled)}）")
+    return sections[filled[0]] if filled else {}
 
 
 def boxes(html: Path):
@@ -108,11 +127,18 @@ def overlap(a, b):
 def main():
     ap = argparse.ArgumentParser(description="図版と余白を機械で検査する")
     ap.add_argument("html", nargs="+")
-    ap.add_argument("--manifest", help="テンプレの基準値（body-top / body-bottom / min-font）")
+    ap.add_argument("--manifest",
+                    help="基準値の正本（既定は data/template-baselines.md）")
+    ap.add_argument("--template",
+                    help="正本の中のどの節を使うか。**節が複数あるときは必須**")
     ap.add_argument("--review", help="図版の判定表。**未確認が残っていれば落とす**")
     args = ap.parse_args()
 
-    man = manifest_of(Path(args.manifest)) if args.manifest else {}
+    try:
+        man = manifest_of(Path(args.manifest), args.template) if args.manifest else {}
+    except LookupError as e:
+        print(f"**基準値を読めない。**{e}")
+        return checked.summary("visual_check", 0, "枚", 1, {"基準値": args.manifest})
     top_ref, bot_ref = man.get("body-top"), man.get("body-bottom")
     min_font = man.get("min-font")
 
