@@ -61,8 +61,19 @@ def find_soffice(quiet=False):
 
 
 def convert_png(soffice, src: Path, outdir: Path) -> Path:
+    # **呼ぶたびに専用の設定フォルダを渡す。**共有の設定を使うと、同じ機械で別の LibreOffice が
+    # 動いているとき衝突して落ちる（実績: 並行の試験で何度も失敗し、再実行で通った）
+    profile = Path(tempfile.mkdtemp(prefix="qa_lo_"))
+    try:
+        return _convert_png(soffice, src, outdir, profile)
+    finally:
+        shutil.rmtree(profile, ignore_errors=True)
+
+
+def _convert_png(soffice, src: Path, outdir: Path, profile: Path) -> Path:
     subprocess.run(
-        [soffice, "--headless", "--convert-to", "png", "--outdir", str(outdir), str(src)],
+        [soffice, f"-env:UserInstallation={profile.as_uri()}",
+         "--headless", "--convert-to", "png", "--outdir", str(outdir), str(src)],
         check=True, capture_output=True,
     )
     png = outdir / (src.stem + ".png")

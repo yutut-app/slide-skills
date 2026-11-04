@@ -11,10 +11,10 @@
 python3 scripts/chart_xlsx.py <案件>/out/latest/deck.html -o <案件>/out/latest/charts
 
 # 2. 貼る前に、対応づけを確かめる（**どの環境でも動く**）
-python3 scripts/chart_xlsx.py --paste --dry-run <案件>/out/latest/charts <案件>/out/latest/deck_rev1.pptx
+python3 scripts/chart_xlsx.py --paste --dry-run <案件>/out/latest/charts <案件>/out/latest/deck.pptx
 
 # 3. Excel のグラフを pptx に貼る（**Windows + Excel + PowerPoint**）
-python3 scripts/chart_xlsx.py --paste <案件>/out/latest/charts <案件>/out/latest/deck_rev1.pptx
+python3 scripts/chart_xlsx.py --paste <案件>/out/latest/charts <案件>/out/latest/deck.pptx
 ```
 
 貼る位置は `geometry.json` に控えてある（元の図の座標）。

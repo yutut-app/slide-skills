@@ -5,7 +5,7 @@
     python3 scripts/chart_xlsx.py deck/deck.html -o deck/charts
 
     # 2. Excel のグラフを pptx に貼る（**Windows + Excel + PowerPoint のみ**）
-    python3 scripts/chart_xlsx.py --paste deck/charts deck/deck_rev1.pptx
+    python3 scripts/chart_xlsx.py --paste deck/charts out/latest/deck.pptx
 
 ## なぜ Excel を経由するか
 

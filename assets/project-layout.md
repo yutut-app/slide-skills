@@ -47,6 +47,11 @@
 **2案を並べて作るときだけ例外。**`out/latest-a/` `out/latest-b/` のように用途を名前に出し、
 **どちらを正とするかを `project.md` に書く。**
 
+**案件に版の運用があるときも例外。**受け取った資料の名前に版が入っている（`…_Rev3.pptx`）、
+同じ版に上書きすると決まっている、などは**案件の運用に従い、`project.md` に書く。**
+上書きするときは `skills/slider-deck/scripts/guard_edit.py check` を先に通す（退避は自動）。
+詳しくは `skills/slider-deck/references/55_revise.md` の「版の扱い」。
+
 ## 4. 道具の既定
 
 **出力先を渡さなくても、同じ場所に出る。**

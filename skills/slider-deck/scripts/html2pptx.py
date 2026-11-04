@@ -470,14 +470,13 @@ def guard_overwrite(out: Path, force: bool):
     """
     if not out.exists() or force:
         return
-    import datetime
-    stamp = datetime.datetime.now().strftime("%Y%m%d-%H%M")
-    alt = out.with_name(f"{out.stem}_{stamp}{out.suffix}")
+    # 日時入りの別名は勧めない（project-layout.md: 日時を名前に入れない）
     sys.exit(
         f"既にある: {out}\n"
         "**上書きしない。** 利用者が手で直したものかもしれない。\n"
-        f"  別名で出す: -o {alt}\n"
-        "  意図して置き換えるなら --force"
+        f"  確かめる: python3 scripts/guard_edit.py check {out}\n"
+        "  変わっていなければ --force で置き換える。"
+        "別名にするなら、名前は案件の版の運用に合わせる（日時は入れない）"
     )
 
 
@@ -608,9 +607,15 @@ def main():
                  "  HTML に <meta name=\"template\" content=\"...\"> を書くか、\n"
                  "  --template でテンプレートの .pptx を渡す。\n"
                  "**元の pptx は要らない。要るのはテンプレートだけ。**")
-    template = Path(tpl)
+    # --template は打った場所から、meta は HTML の場所から探す（打つ人はそう読む）。
+    # 実績: `--template in/客先書式.pptx` を HTML の場所から探して見つからなかった
+    template = Path(tpl).expanduser()
     if not template.is_absolute():
-        template = (html_path.resolve().parent / template).resolve()
+        bases = ([Path.cwd()] if args.template else []) + [html_path.resolve().parent]
+        tried = [(b / template).resolve() for b in bases]
+        template = next((t for t in tried if t.exists()), tried[0])
+        if not template.exists():
+            sys.exit("テンプレートが見つからない。探した場所:\n" + "\n".join(f"  {t}" for t in tried))
     if not template.exists():
         sys.exit(f"テンプレートが見つからない: {template}")
 

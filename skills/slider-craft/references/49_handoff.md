@@ -349,8 +349,8 @@ terms.md（用語）／numbers.md（数値）
 
 ```bash
 python3 scripts/html_png.py <受け取った>/print.html
-python3 skills/slider-deck/scripts/html2pptx.py <受け取った>/print.html -o <案件>/out/latest/deck_rev<n>.pptx
-python3 skills/slider-deck/scripts/qa_render.py <案件>/out/latest/deck_rev<n>.pptx
+python3 skills/slider-deck/scripts/html2pptx.py <受け取った>/print.html -o <案件>/out/latest/deck.pptx
+python3 skills/slider-deck/scripts/qa_render.py <案件>/out/latest/deck.pptx
 ```
 
 **同じ HTML でも、相手の環境とは絵が違う。** フォントが違えば折り返しが変わる。

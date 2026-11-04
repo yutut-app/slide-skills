@@ -152,6 +152,7 @@ HTML に書けないものなので、pptx 側で作る。
 | `scripts/qa_render.py` | pptx / xlsx を1枚1枚 PNG にする。`--probe` で環境確認 | **手順3（必ず）** |
 | `scripts/gen_template.py` | **テンプレートが手元に無いとき、資料の HTML から作り直す** | **手順0でテンプレートが無いとき** |
 | `scripts/probe_pptx.py` | **出てきた pptx の中身を1コマンドで要約する**（書体・文字サイズ・枠の自動拡張・表の余白） | **変換器を直したとき／中身を疑うとき** |
+| `scripts/guard_edit.py` | **上書き・削除の前に、手直しを差分で確かめて退避する**（`record` で控え、`check` で止める） | **上書き・削除の前に必ず** |
 | `scripts/diff_slides.py` | **変えたスライドを機械的に出す** | 手順4（必ず） |
 | `scripts/pptx_diff_html.py` | **手で直した pptx と HTML の差を出す** | 編集済み pptx を受け取ったとき |
 | `scripts/checked.py` | 検査のサマリ行（対象・件数・前提）。**0件と未実施を区別する** | 直接は使わない |
@@ -175,6 +176,7 @@ HTML に書けないものなので、pptx 側で作る。
 | `chart_xlsx.py` | HTML／`.xlsx` のフォルダ | **Excel でグラフを作って貼る**とき | .xlsx 群、貼り付け |
 | `html_png.py` | HTML | **利用者が見ている絵**を出すとき | HTML の PNG |
 | `fit_check.py check` | pptx | **変換の直後。**機械で出る欠陥を拾う | 不合格／注意の表 |
+| `jp_wrap_check.py` | pptx（＋元の pptx） | **fit_check の後。**日本語の行の崩れと画像の劣化を拾う | 指摘／要確認の表 |
 | `qa_render.py` | pptx | **自分の目で見る**とき | 1枚ずつの PNG |
 | `probe_pptx.py` | pptx | **絵に違和感があるのに原因が分からない**とき | 書体・自動拡張・表の余白 |
 | `diff_slides.py` | pptx **2つ** | **直した後。**変えた枚を確かめるとき | 変わった枚の一覧 |
@@ -313,7 +315,7 @@ HTML の絵・pptx の絵・検査が一度に出る。**両方の絵を並べ�
 **位置は、写すか・任せるかを選べる。** ★
 
 ```bash
-python3 scripts/html2pptx.py <案件>/out/latest/deck.html -o <案件>/out/latest/deck_rev1.pptx
+python3 scripts/html2pptx.py <案件>/out/latest/deck.html -o <案件>/out/latest/deck.pptx
 ```
 
 | | いつ使うか | 何が起きるか |
@@ -328,11 +330,11 @@ python3 scripts/html2pptx.py <案件>/out/latest/deck.html -o <案件>/out/lates
 字を小さくして収めると、読めない資料が「合格」になる。
 
 **出力の決まり。**利用者から受け取ったファイルは上書きせず、必ず別名で出す。
-ファイル名に日付か版を入れる（`<案件>/out/latest/deck_rev<n>.pptx`）。出力先は `<案件>/out/latest/` に統一する（版はフォルダで分ける）。
+名前は `<案件>/out/latest/deck.pptx` に固定し、**版はフォルダで分ける**（`assets/project-layout.md`）。名前に日付も版も入れない。案件に版の運用（名前に Rev を入れる等）があればそちらに従う（`references/55_revise.md`「版の扱い」）。
 **案内するパスは、実行前に実在を確かめる**（導入形態でパスが変わる）。
 
 ```bash
-python3 scripts/html2pptx.py <作業>/print.html -o <案件>/out/latest/deck_rev<n>.pptx
+python3 scripts/html2pptx.py <作業>/print.html -o <案件>/out/latest/deck.pptx
 ```
 
 **出力に出る「換算係数とその出所」を読む。**
@@ -343,11 +345,12 @@ python3 scripts/html2pptx.py <作業>/print.html -o <案件>/out/latest/deck_rev
 
 ### 3. 検査 ★止まらないが、必ず行う
 
-`references/60_qa.md` に従う。**3つとも回す。1つでも欠けたら「検査した」と書かない。**
+`references/60_qa.md` に従う。**4つとも回す。1つでも欠けたら「検査した」と書かない。**
 
 ```bash
-python3 scripts/qa_render.py <案件>/out/latest/deck_rev<n>.pptx
-python3 scripts/fit_check.py check <案件>/out/latest/deck_rev<n>.pptx
+python3 scripts/qa_render.py <案件>/out/latest/deck.pptx
+python3 scripts/fit_check.py check <案件>/out/latest/deck.pptx
+python3 scripts/jp_wrap_check.py <案件>/out/latest/deck.pptx --before <元の pptx>   # 入口(2) は必ず --before
 python3 scripts/html_png.py <作業>/print.html
 ```
 
@@ -360,7 +363,7 @@ python3 scripts/html_png.py <作業>/print.html
 **絵で違和感があるのに原因が分からないときは、中身を要約する。**
 
 ```bash
-python3 scripts/probe_pptx.py <案件>/out/latest/deck_rev<n>.pptx
+python3 scripts/probe_pptx.py <案件>/out/latest/deck.pptx
 ```
 
 書体・文字サイズ・枠の自動拡張・表の余白が1つの表で出る。
@@ -392,7 +395,7 @@ PowerPoint は**行の高さを、中の文字に合わせて勝手に伸ばす�
 **直すのは HTML。** 何をどう直したかを、スライド番号付きで出す。
 
 ```bash
-python3 scripts/diff_slides.py <案件>/out/latest/deck_rev<n-1>.pptx <案件>/out/latest/deck_rev<n>.pptx
+python3 scripts/diff_slides.py <案件>/out/v<NN>/deck.pptx <案件>/out/latest/deck.pptx   # 前に出した版と今
 ```
 
 **直したら手順2に戻る。** 変換し直して、もう一度検査する。
@@ -423,6 +426,7 @@ python3 skills/slider-deck/scripts/layout_check.py <案件>
 | **版を切るとき**（`out/latest` を `out/vNN` へ写す＝外に出す判断） | `out/latest` の中の上書き |
 | **段階の切り替え**（利用者の宣言による。こちらから打ち切らない） | 変換のやり直し |
 | 元の HTML を上書きする書き込み | 新しい出力ファイルの生成 |
+| **手直しの差分が見つかったとき**（`guard_edit.py` が止めた） | 差分が無い上書き（退避は自動） |
 | 資料を外部に送る操作（**公開は禁止**） | 手順2〜4の往復 |
 | **再現できない図があったとき、どう埋めるか** | 再現できた図の細部 |
 

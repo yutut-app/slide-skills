@@ -46,6 +46,10 @@ REFS = {
           "skills/slider-deck/references/07_official.md"],
 }
 
+# 入口(2) で「書式だけ合わせたい」ときに読む（slider-reskin の入口(2)）
+RESKIN_REFS = ["skills/slider-reskin/references/30_from_pptx.md",
+               "skills/slider-deck/references/07_official.md"]
+
 
 def is_slide_html(p: Path) -> bool:
     if p.name == "print.html":
@@ -55,6 +59,25 @@ def is_slide_html(p: Path) -> bool:
     except OSError:
         return False
     return 'class="slide' in head or "class='slide" in head
+
+
+_META_TPL = re.compile(r"""<meta[^>]+name=["']template["'][^>]+content=["']([^"']+)["']""", re.I)
+
+
+def meta_templates(html):
+    """HTML の <meta name="template"> が指す pptx。**登録していなくても、変換で使われる。**
+    実績: in/template.pptx を meta で指していたのに、判定表は「テンプレート無し」と出した。"""
+    out = []
+    for h in html:
+        try:
+            head = h.read_text(encoding="utf-8", errors="ignore")[:20000]
+        except OSError:
+            continue
+        for m in _META_TPL.findall(head):
+            t = (h.parent / m).resolve()
+            if t.exists() and t not in out:
+                out.append(t)
+    return out
 
 
 def templates(root: Path):
@@ -122,6 +145,10 @@ def main():
             and not p.name.startswith("~$")]
     revs = [p.name for p in cand if _REV.search(p.stem)]
     tpls = templates(root)
+    meta_tpls = meta_templates(html)
+    tpls += [f"{t.name}（HTML の meta が指す）" for t in meta_tpls]
+    # HTML と別に、テンプレートとして指されていない pptx がある＝書式の元かもしれない
+    other_pptx = [p for p in pptx if p not in meta_tpls]
     tool_rows, can_render = tools()
     skills = neighbor_skills()
     craft = dict(skills).get("slider-craft") == "有り"
@@ -138,7 +165,7 @@ def main():
     print("|---|---|")
     print(f"| スライドの HTML | {len(html)} 件{'' if html else '（**無し**）'} |")
     print(f"| pptx | {len(pptx)} 件{'' if pptx else '（無し）'} |")
-    print(f"| 登録済みのテンプレート | {', '.join(tpls) if tpls else '**無し**'} |")
+    print(f"| テンプレート（登録済み・HTML の指定） | {', '.join(tpls) if tpls else '**無し**'} |")
     for name, st in tool_rows:
         print(f"| {name} | {st} |")
     for name, st in skills:
@@ -148,10 +175,16 @@ def main():
     print(f"\n**入口：{entry}**（{why}）\n")
     if entry == "1":
         print("- HTML から pptx に変換し、ずれは HTML に差し戻す")
+        if other_pptx:
+            print(f"- **HTML と別に pptx がある**（{', '.join(p.name for p in other_pptx[:3])}）。"
+                  "**その書式（マスター・レイアウト）に載せたいなら slider-reskin の入口(2)**。そのとき読むのは "
+                  + ", ".join(f"`{r}`" for r in RESKIN_REFS) + "（意図を下で聞く）")
     elif entry == "2":
         print("- **既存の pptx が正本。最初から差分修正モード**（作り直さない。必要な箇所だけ直す）")
         print("- 上書き・削除の前に、利用者の手直しを差分で確かめて退避する")
-        print("- **書式だけを合わせたいなら slider-reskin**（意図を下で聞く）")
+        print("- **書式だけを合わせたいなら slider-reskin**（意図を下で聞く）。"
+              "そのとき読むのは " + ", ".join(f"`{r}`" + ("" if (REPO / r).exists() else "（**まだ無い**）")
+                                           for r in RESKIN_REFS))
     else:
         print("- **作らない。**HTML 一式か、土台にする pptx を受け取る")
 
@@ -165,7 +198,8 @@ def main():
           + ("" if craft else "**この機械には slider-craft が無い。**構成を良くしたい依頼には応えられない"))
 
     print("\n**まとめて確認すること**（ここで1回だけ止まる）\n")
-    print("1. 入口はこれでよいか（書式だけ合わせたい／中身から作りたい、なら違う入口）")
+    print("1. 入口はこれでよいか（書式だけ合わせたい／中身から作りたい、なら違う入口）"
+          + ("。**HTML と別の pptx は、書式の元か、参考か**" if entry == "1" and other_pptx else ""))
     print("2. **版の扱い**：別名で出すか、同じ版に上書きするか"
           + ("（Rev の形跡あり。案件の運用を確かめる）" if revs else ""))
     if not craft:

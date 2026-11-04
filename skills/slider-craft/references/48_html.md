@@ -276,9 +276,9 @@ LibreOffice が別の書体に置き換え、**折り返し位置が変わる。
 | 利用者に渡す前（最終） | 渡すのは pptx。見ずに渡さない |
 
 ```bash
-python3 skills/slider-deck/scripts/html2pptx.py <案件>/work/*.html -o <案件>/out/latest/deck_rev<n>.pptx
-python3 skills/slider-deck/scripts/qa_render.py <案件>/out/latest/deck_rev<n>.pptx
-python3 skills/slider-deck/scripts/fit_check.py check <案件>/out/latest/deck_rev<n>.pptx
+python3 skills/slider-deck/scripts/html2pptx.py <案件>/work/*.html -o <案件>/out/latest/deck.pptx
+python3 skills/slider-deck/scripts/qa_render.py <案件>/out/latest/deck.pptx
+python3 skills/slider-deck/scripts/fit_check.py check <案件>/out/latest/deck.pptx
 ```
 
 **出したら HTML の絵と並べて、ずれを探す。** 片方だけでは出ない。
@@ -300,7 +300,7 @@ python3 skills/slider-deck/scripts/qa_render.py --probe
 **区切りごとに版を残す。** 出力は毎回別名にし、前の版と比べられるようにする。
 
 ```bash
-python3 skills/slider-deck/scripts/diff_slides.py <案件>/out/latest/deck_rev1.pptx <案件>/out/latest/deck_rev2.pptx
+python3 skills/slider-deck/scripts/diff_slides.py <案件>/out/v<NN>/deck.pptx <案件>/out/latest/deck.pptx   # 前に出した版と今
 ```
 
 **重なり・はみ出し・溢れはゼロになるまで回す。**回数で打ち切らない

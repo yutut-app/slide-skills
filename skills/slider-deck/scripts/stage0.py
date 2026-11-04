@@ -78,9 +78,13 @@ def main():
                 other.getparent().remove(other)
         # **元の HTML と同じ場所に書く。**別の場所に書くと
         # `images/logo.png` のような相対の参照が切れ、ロゴが落ちる
+        # **ただし終わったら消す。**受け取りの `in/` に中間ファイルが残ると、受け取ったものと
+        # 取り違える（実績: 試験で `in/deck_1枚.html` が残った）
         one = src.parent / f"{src.stem}_1枚.html"
         one.write_bytes(LH.tostring(doc, encoding="utf-8"))
-        print(f"**{len(sls)} 枚のうち {args.slide} 枚目だけを見る。** → {one.name}\n")
+        import atexit
+        atexit.register(lambda: one.unlink(missing_ok=True))
+        print(f"**{len(sls)} 枚のうち {args.slide} 枚目だけを見る。** → {one.name}（終わったら消す）\n")
         src = one
     pptx = out / f"{src.stem}_stage0.pptx"
 
