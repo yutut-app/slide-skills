@@ -29,7 +29,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import checked
-from paths import project_root
+from paths import layout_doc, project_root
 
 HERE = Path(__file__).resolve()
 REPO = HERE.parents[3]                       # <repo>/skills/<skill>/scripts/entry_check.py
@@ -170,6 +170,8 @@ def main():
         print(f"| {name} | {st} |")
     for name, st in skills:
         print(f"| スキル {name} | {st} |")
+    lay = layout_doc()
+    print(f"| 置き場所の決めごと（正本） | {lay if lay else '**無し**（要点: 受け取りは in/、出力は out/latest/、名前は固定）'} |")
     print(f"| 版の名前（Rev 等）の形跡 | {', '.join(revs[:5]) if revs else '無し'} |")
 
     print(f"\n**入口：{entry}**（{why}）\n")
