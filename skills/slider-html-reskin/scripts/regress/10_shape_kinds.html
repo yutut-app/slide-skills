@@ -1,0 +1,21 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="px-per-pt" content="1.333333">
+<title>図形の種類</title>
+<style>
+.slide { width: 1280px; height: 720px; position: relative; font-family: Verdana, Meiryo; }
+.sq   { position: absolute; left: 60px;  top: 100px; width: 200px; height: 80px;
+        background: #008096; }                         /* 四角 */
+.pill { position: absolute; left: 320px; top: 100px; width: 200px; height: 40px;
+        background: #e08a1e; border-radius: 26px; }    /* 丸帯（半径 ≧ 高さの半分） */
+.card { position: absolute; left: 580px; top: 100px; width: 200px; height: 120px;
+        background: #ebeae8; border-radius: 12px; }    /* 角丸 */
+.dot  { position: absolute; left: 840px; top: 100px; width: 60px;  height: 60px;
+        background: #008096; border-radius: 50%; }     /* まる */
+.box  { position: absolute; left: 60px;  top: 300px; width: 200px; height: 80px;
+        border: 2px solid #008096; border-radius: 12px; }  /* 角丸＋枠線 */
+</style>
+<section class="slide">
+  <div class="sq"></div><div class="pill"></div><div class="card"></div>
+  <div class="dot"></div><div class="box"></div>
+</section>

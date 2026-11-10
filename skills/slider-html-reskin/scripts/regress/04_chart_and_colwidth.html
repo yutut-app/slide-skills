@@ -1,0 +1,25 @@
+<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"/><title>回帰: グラフと列幅</title><style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Verdana','Meiryo',sans-serif}
+.slide{width:1280px;height:720px;position:relative;background:#fff}
+.c1{left:40px;top:60px;width:560px;height:300px;position:absolute}
+.c2{left:640px;top:60px;width:560px;height:300px;position:absolute}
+.t1{left:40px;top:400px;width:1200px;height:120px;position:absolute}
+</style></head><body><div class="slide">
+<!-- 1系列の縦棒 -->
+<svg class="c1" data-chart="column" data-series="不良件数"
+     data-labels="ネジ締め忘れ,はんだ不良,部品欠品,キズ・打痕,その他"
+     data-values="62,18,11,7,5"
+     data-line="60,77,88,95,100"></svg>
+<!-- 2系列の折れ線 -->
+<svg class="c2" data-chart="line"
+     data-labels="1月,2月,3月,4月"
+     data-series="対策前" data-values="2.1,1.6,2.4,1.8"
+     data-series-2="対策後" data-values-2="1.2,0.7,0.4,0.3"></svg>
+<!-- 列幅を colgroup で指定した表 -->
+<table class="t1">
+  <colgroup><col style="width:600px"><col style="width:200px"><col style="width:400px"></colgroup>
+  <tr><th>要因</th><th>件数</th><th>対策</th></tr>
+  <tr><td>ネジ締め忘れ</td><td>62</td><td>治具の導入</td></tr>
+</table>
+</div></body></html>

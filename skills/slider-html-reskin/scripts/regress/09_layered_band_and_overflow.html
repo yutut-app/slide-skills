@@ -1,0 +1,22 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="px-per-pt" content="1.333333">
+<title>重ね置きの帯と、入りきらない枚</title>
+<style>
+.slide { width: 1280px; height: 720px; position: relative; font-family: Verdana, Meiryo; }
+/* 帯と、その上に重ねた白文字。**横に重なっているので「横並び」ではない** */
+.band { position: absolute; left: 40px; top: 88px; width: 1200px; height: 83px;
+        background: #008096; }
+.band-text { position: absolute; left: 56px; top: 108px; width: 1100px; height: 40px;
+             color: #ffffff; font-size: 22px; }
+.row { position: absolute; left: 40px; width: 1200px; height: 90px; font-size: 14px; }
+</style>
+<section class="slide">
+  <div class="band"></div>
+  <div class="band-text">帯の上に重ねた白い文字</div>
+  <div class="row" style="top:200px">1</div>
+  <div class="row" style="top:300px">2</div>
+  <div class="row" style="top:400px">3</div>
+  <div class="row" style="top:500px">4</div>
+  <div class="row" style="top:600px">5</div>
+</section>

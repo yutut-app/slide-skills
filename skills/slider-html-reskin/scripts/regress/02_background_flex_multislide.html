@@ -1,0 +1,31 @@
+<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"/><title>回帰: 塗り・flex・複数枚</title><style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Verdana','Meiryo',sans-serif}
+.slide{width:1280px;height:720px;position:relative;background:#ffffff}
+.tb{position:absolute;padding:4.8px 9.6px}
+/* ショートハンドで書いた塗り。background-color ではない */
+.band{left:40px;top:100px;width:1200px;height:80px;background:#008096}
+.band p{font-size:24px;color:#fff;line-height:1.2}
+/* flex 既定(row) + justify-content:center → **横**の中央ぞろえ */
+.pagebox{left:1175px;top:660px;width:105px;height:24px;background:#EA8712;
+         display:flex;align-items:center;justify-content:center}
+.pagebox p{font-size:13px;color:#fff;line-height:1}
+/* flex column + justify-content:center → **縦**の中央ぞろえ */
+.vbox{left:40px;top:300px;width:300px;height:120px;background:#EBEAE8;
+      display:flex;flex-direction:column;justify-content:center}
+.vbox p{font-size:20px;color:#000;line-height:1.2}
+.chart{left:400px;top:300px;width:400px;height:200px}
+.tbl{left:40px;top:480px;width:600px;height:120px}
+</style></head><body>
+<div class="slide">
+  <div class="tb band"><p>ショートハンドの塗りが残るか</p></div>
+  <div class="tb vbox"><p>縦中央</p></div>
+  <svg class="chart" data-figure="パレート図" viewBox="0 0 400 200"><line x1="0" y1="200" x2="400" y2="200" stroke="#000"/><line x1="0" y1="0" x2="0" y2="200" stroke="#000"/></svg>
+  <table class="tbl"><tr><th>項目</th><th>値</th></tr><tr><td>不良率</td><td>2.4%</td></tr></table>
+  <div class="tb pagebox"><p>1</p></div>
+</div>
+<div class="slide">
+  <div class="tb band"><p>2枚目。捨てられていないか</p></div>
+  <div class="tb pagebox"><p>2</p></div>
+</div>
+</body></html>

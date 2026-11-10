@@ -1,0 +1,14 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"/><title>回帰: svg の寸法と viewBox</title><style>
+.slide{width:1280px;height:720px;position:relative;background:#fff}
+.a{position:absolute;left:100px;top:100px;width:800px;height:400px}
+.b{position:absolute;left:100px;top:100px;width:800px}
+.c{position:absolute;left:100px;top:100px}
+</style></head><body><div class="slide">
+<!-- どの書き方でも y1=200 は top=300px。ずれるとスライド外へ飛ぶ -->
+<!-- A: viewBox あり・CSS に width/height -->
+<svg class="a" viewBox="0 0 800 400"><line x1="0" y1="200" x2="800" y2="200" stroke="#000"/></svg>
+<!-- B: viewBox なし・CSS の height 無し -->
+<svg class="b"><line x1="0" y1="200" x2="800" y2="200" stroke="#000"/></svg>
+<!-- C: viewBox なし・CSS の width も height も無し（属性で指定） -->
+<svg class="c" width="800" height="400"><line x1="0" y1="200" x2="800" y2="200" stroke="#000"/></svg>
+</div></body></html>

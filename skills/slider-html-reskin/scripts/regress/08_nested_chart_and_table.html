@@ -1,0 +1,26 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="px-per-pt" content="1.333333">
+<title>本文枠の中の図と表</title>
+<style>
+.slide { width: 1280px; height: 720px; position: relative; font-family: Verdana, Meiryo; }
+.band { position: absolute; left: 40px; top: 88px; width: 1200px; height: 83px;
+        background: #008096; color: #fff; }
+.body-area { position: absolute; left: 0; top: 0; width: 1280px; height: 720px; }
+.fig { position: absolute; left: 60px; top: 250px; width: 560px; height: 300px; }
+.tbl { position: absolute; left: 660px; top: 250px; width: 520px; }
+</style>
+<section class="slide">
+  <div class="band">リード帯</div>
+  <div class="body-area">
+    <div class="fig">
+      <svg data-chart="column" data-series="件数" data-labels="A,B,C"
+           data-values="62,18,11"></svg>
+    </div>
+    <table class="tbl">
+      <tr><th>区分</th><th>件数</th></tr>
+      <tr><td>A</td><td>62</td></tr>
+      <tr><td>B</td><td>18</td></tr>
+    </table>
+  </div>
+</section>

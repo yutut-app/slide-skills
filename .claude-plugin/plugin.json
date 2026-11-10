@@ -1,0 +1,12 @@
+{
+  "name": "slide-skills",
+  "description": "日本語の報告・提案スライドのスキル群。slider-craft が中身（意図の確定・骨子・図解の型・文体規約・検査）を、slider-reskin が器（別テンプレートへの載せ替えとマスター無傷の検証）を担う。",
+  "version": "0.1.0",
+  "keywords": [
+    "slide",
+    "powerpoint",
+    "pptx",
+    "presentation",
+    "japanese"
+  ]
+}

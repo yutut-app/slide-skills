@@ -1,0 +1,29 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="px-per-pt" content="1.333333">
+<title>整列と、箱で描いたグラフ</title>
+<style>
+.slide { width: 1280px; height: 720px; position: relative; font-family: Verdana, Meiryo; }
+.band  { position: absolute; left: 0; top: 0; width: 1280px; height: 56px;
+         background: #008096; color: #fff; }
+.a, .b { position: absolute; top: 120px; width: 600px; height: 200px;
+         background: #ebeae8; font-size: 12px; }
+.a { left: 60px; }
+.b { left: 300px; }                      /* わざと重ねる。整列で解けるべき */
+.chart { position: absolute; left: 60px; top: 380px; width: 520px; height: 220px; }
+.bar   { display: inline-block; width: 60px; background: #008096; }
+.b1 { height: 180px; } .b2 { height: 110px; } .b3 { height: 45px; }
+.kpi   { position: absolute; left: 640px; top: 380px; width: 540px; height: 220px; }
+.card  { display: inline-block; width: 160px; height: 100px; background: #ebeae8; }
+</style>
+<section class="slide">
+  <div class="band">見出しの帯（固定）</div>
+  <div class="a">左の枠</div>
+  <div class="b">右の枠</div>
+  <div class="chart">
+    <div class="bar b1"></div><div class="bar b2"></div><div class="bar b3"></div>
+  </div>
+  <div class="kpi">
+    <div class="card"></div><div class="card"></div><div class="card"></div>
+  </div>
+</section>
