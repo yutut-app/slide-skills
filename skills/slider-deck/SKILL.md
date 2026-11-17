@@ -84,14 +84,15 @@ slider-pptx-craft（pptx を直接）  ┴→ slider-deck（検査）  ← こ�
 |---|---|---|
 | `scripts/entry_check.py` | **入口の判定**（5スキル共通）。担当・版・道具・旧スキル | **手順0で必ず（最初に）** |
 | `references/60_qa.md` | **見た目と文章の検査。**指摘と要確認、画像の見方、報告の形 | **手順2〜4で必ず** |
-| `assets/content/07_official.md`（リポジトリ直下） | 公式 pptx の検査道具（文字の残り・検証）との使い分け | 公式の道具を使うとき |
-| `assets/project-layout.md`（`python3 scripts/paths.py --layout`） | 成果物の置き場 | 結果を出す前 |
+| `references/content/07_official.md`（各スキルに同梱） | 公式 pptx の検査道具（文字の残り・検証）との使い分け | 公式の道具を使うとき |
+| `references/content/project-layout.md`（`python3 scripts/paths.py --layout`） | 成果物の置き場 | 結果を出す前 |
 | `scripts/qa_render.py` | pptx / xlsx を1枚ずつ PNG にする（`--probe` で環境確認） | **手順2（必ず）** |
 | `scripts/fit_check.py` | 重なり・はみ出し・溢れの検算（`check`） | **手順2（必ず）** |
 | `scripts/jp_wrap_check.py` | 日本語の行・校正言語・画像・ノート（`--before` で元と比べる） | **手順2（必ず）** |
 | `scripts/diff_slides.py` | 前の版との差（`--format` で強調・改行も） | **前の版があるとき必ず** |
 | `scripts/html_png.py` / `scripts/pptx_diff_html.py` | HTML の絵、HTML と pptx の差 | **HTML から作った pptx のとき必ず** |
 | `scripts/probe_pptx.py` | 書体・文字サイズ・自動拡張・表の余白の要約 | 絵に違和感があるのに原因が分からないとき |
+| `scripts/story_check.py` | **読み手の目の表**（枚ごとの見出しと最初の1文、全体像の1文が無い画面の枚） | **手順3-2（必ず）** |
 | `scripts/layout_check.py` | 置き場所の検査（決めていないフォルダ・別名・日時入りの名前） | **人に渡す前に必ず** |
 | `scripts/checked.py` | サマリ行（対象・件数・前提）。**0件と未実施を区別する** | 直接は使わない |
 
@@ -118,6 +119,8 @@ slider-pptx-craft（pptx を直接）  ┴→ slider-deck（検査）  ← こ�
 python3 scripts/entry_check.py <検査する>.pptx [--project <案件>] --want check
 ```
 
+**終了コード3（「止まる：スキルの入れ方に不備がある」）が出たら、作業を始めない。**不備をそのまま利用者に伝え、入れ直してもらう（README「登録と更新」）。
+
 **出てきた表を最初の出力にする。**作る・直す依頼なら、そのスキルへ渡す（検査だけをここで受ける）。
 **検査は書き込まないので、版の扱いは聞かない。**道具がそろっていれば止まらずに手順1へ進む。
 
@@ -139,6 +142,7 @@ python3 scripts/fit_check.py check <対象>.pptx
 python3 scripts/jp_wrap_check.py <対象>.pptx --before <前の版>.pptx      # 前の版が無ければ --before を外し、前提に書く
 python3 scripts/diff_slides.py <前の版>.pptx <対象>.pptx --format        # 前の版があるとき
 python3 scripts/html_png.py <元の>/print.html                             # HTML から作ったとき
+python3 scripts/story_check.py <対象>.pptx                                 # 読み手の目の表
 ```
 
 **各道具のサマリ行（`検査: ... 対象 n ... 指摘 n件 前提: ...`）を、報告にそのまま貼る。**
@@ -151,6 +155,20 @@ python3 scripts/html_png.py <元の>/print.html                             # HT
 - **表は機械の検査だけで済ませない。**PowerPoint は行の高さを中の文字に合わせて伸ばすので、`fit_check` に出ない
 - **HTML から作ったときは、HTML の絵と並べる。**ずれは片方だけでは出ない
 - **要確認は、画像で確定させる。**推定（折り返し）は外れうる
+- **差分の「差あり」も画像で確かめてから報告する。**道具の出力をそのまま報告しない
+
+### 3-2. 読み手の目で流れを見る ★必ず
+
+見た目の検査が全部通っても、**全体の位置を知らない人が読んで分からない枚**は残る。
+`story_check.py` の流れの表を上から読み、枚ごとに次を確かめる（`references/content/80_audience.md`、`30_visual.md`「画面を見せる枚の型」）。
+
+| 見ること | 区分 |
+|---|---|
+| 何の枚か（見出しと最初の1文）が分かるか | 要確認 |
+| 前の枚から、なぜこの話に移るかが分かるか | 要確認 |
+| 画面の画像が主の枚に、「何を、どういう形にしたか」の1文があるか（無ければ道具が拾う） | 要確認 |
+
+**直さない。**差し戻し先は、文・構成なら作った側（`slider-pptx-craft` か `slider-html-craft`）、ノートなら `slider-script`。
 
 ### 4. 報告
 
@@ -171,6 +189,7 @@ python3 scripts/html_png.py <元の>/print.html                             # HT
 |---|---|
 | **指摘** | 数値・機械で決まる欠陥。直してから渡す |
 | **要確認** | 推定、または人の判断が要る（ノートの中身など）。画像で確かめた結果を書く |
+| **指摘（中身の欠け）** | 枚が約束した中身が無い（「表で示す」のに表が無い、「3点」と書いて並んでいない）。**渡すと先方がすぐ気づく**ので、要確認でなく指摘にする |
 | 見ていない | 道具や比べる相手が無く、判定できなかった。**不合格と書かない** |
 
 **差し戻し先の列を空けない。**誰が直すかが無い指摘は、直されない。

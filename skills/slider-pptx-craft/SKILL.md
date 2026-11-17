@@ -81,21 +81,21 @@ slider-deck（検査）→ 指摘はここへ戻る
 ## 公式 pptx スキルとの関係
 
 **このスキルが主導し、公式は道具として使う。**既存の pptx の編集技術（枚の複製・XML の扱い・検証）は公式の領域。
-どこを使い、どこを書式優先で上書きするかは `assets/content/07_official.md`。**公式の文言やコードは写さない。**
+どこを使い、どこを書式優先で上書きするかは `references/content/07_official.md`。**公式の文言やコードは写さない。**
 
 ## 中身の規約は共通
 
 伝えたいこと・骨子・1枚のメッセージ・図の意味・日本語の文体は、**`slider-html-craft` と同じ規約を読む。**
-置き場所はリポジトリ直下の `assets/content/`（`python3 scripts/paths.py --content` が返す）。**ここに写さない。**
+置き場所は、このスキルに同梱した `references/content/`（正本はリポジトリ直下。`tools/bundle_content.py` で写す）。**写しを直接直さない。**
 
 | 決めること | 読む |
 |---|---|
-| 何のための資料か、相手・場面 | `assets/content/10_intent.md` |
-| 骨子（枚の並び） | `assets/content/20_story.md` |
-| 図の選び方と、**図の意味が伝わるか**（色・矢印・同じ概念は同じ図） | `assets/content/30_visual.md` |
-| 日本語（体言止め・改行・文字量） | `assets/content/40_japanese.md` |
-| 数値・用語 | `assets/content/46_numbers.md`、`47_terms.md` |
-| 先方の目で見る | `assets/content/80_audience.md` |
+| 何のための資料か、相手・場面 | `references/content/10_intent.md` |
+| 骨子（枚の並び） | `references/content/20_story.md` |
+| 図の選び方と、**図の意味が伝わるか**（色・矢印・同じ概念は同じ図） | `references/content/30_visual.md` |
+| 日本語（体言止め・改行・文字量） | `references/content/40_japanese.md` |
+| 数値・用語 | `references/content/46_numbers.md`、`47_terms.md` |
+| 先方の目で見る | `references/content/80_audience.md` |
 
 ---
 
@@ -105,8 +105,8 @@ slider-deck（検査）→ 指摘はここへ戻る
 |---|---|---|
 | `scripts/entry_check.py` | **入口の判定**（5スキル共通）。担当・最新版・版・旧スキル | **手順0で必ず（最初に）** |
 | `references/55_revise.md` | **手直しの一覧・修正案の表・書き出しの歯止め・画像・版の扱い・差分の報告** | **手順1〜5で必ず** |
-| `assets/content/07_official.md` | 公式 pptx との使い分け | **公式を使う前に必ず** |
-| `assets/project-layout.md`（`python3 scripts/paths.py --layout`） | 成果物の置き場 | 成果物を出す前に必ず |
+| `references/content/07_official.md` | 公式 pptx との使い分け | **公式を使う前に必ず** |
+| `references/content/project-layout.md`（`python3 scripts/paths.py --layout`） | 成果物の置き場 | 成果物を出す前に必ず |
 | `scripts/pptx_edit.py` | **書式を保って直す**（`formats` / `text` / `image` / `lang` / `notes`） | 手順1と4 |
 | `scripts/diff_slides.py` | 枚ごとの差（`--format` で強調・改行も） | 手順1と5（必ず） |
 | `scripts/guard_edit.py` | 上書き・削除の前に、手直しを差分で確かめて退避する | **上書き・削除の前に必ず**（pptx_edit が自動で呼ぶ） |
@@ -137,6 +137,8 @@ slider-deck（検査）→ 指摘はここへ戻る
 python3 scripts/entry_check.py [<受け取ったファイル>] [--project <案件>] --want pptx
 ```
 
+**終了コード3（「止まる：スキルの入れ方に不備がある」）が出たら、作業を始めない。**不備をそのまま利用者に伝え、入れ直してもらう（README「登録と更新」）。
+
 **出てきた表を最初の出力にする。**担当が違うと出たら、そのスキルへ渡す。
 ここでまとめて聞く：**最新版はどれか**（名前と日付が食い違うとき）、**版の扱い**（別に出す／同じ版に上書き。`55_revise.md`「版の扱い」）。
 
@@ -157,12 +159,22 @@ python3 scripts/pptx_edit.py formats <最新版>.pptx
 
 人が付けた強調・改行・消したものを「これから守ること」として書き出す。**設計の前提は、この表の後の版から取る。**
 
+**直された箇所は、意図を読む**（`55_revise.md` 0-0 の後半）：差分 → 意図の仮説を1行 → 利用者に確かめる → 決まりなら `<案件>/style.md` に残す。
+人が足した枚・直した文は、**同じ型で次から作れる**ように、何を直したかでなく**なぜ直したか**を残す。
+
 ### 2. 中身を決める
 
 | 場面 | すること | 止まるか |
 |---|---|---|
 | 依頼された箇所だけ直す | 直す箇所を決める（手順3へ） | — |
-| **次回分を作る・新規に作る** | 何を言うか（意図）と骨子を `assets/content/10_intent.md` `20_story.md` で決める。**前回からの変更点を枚ごとに1行で出す** | **骨子で止まる** |
+| **次回分を作る・新規に作る** | 何を言うか（意図）と骨子を `references/content/10_intent.md` `20_story.md` で決める。**前回からの変更点を枚ごとに1行で出す** | **骨子で止まる** |
+
+**骨子を出す前に、必ず確かめる3つ**（`10_intent.md` `20_story.md` `30_visual.md`）：
+1. 依頼が作業の言い方（「〜を作った」「〜に足した」）なら、**先方が何を分かるようになるか**に置き換えたか。機能・道具の説明を本体にしていないか
+2. **紙面と口頭の割り振りの表**を一緒に出したか（「口頭でよい」と言われたものは紙面に載せない）
+3. **画面を見せる枚**に、「何を、どういう形にしたか」の1文があるか
+
+**`<案件>/style.md`（言い回しの台帳）があれば、書く前に読む。**
 
 **前回の版にあるものを、聞かずに消さない。足さない。**変える枚と変えない枚を骨子に書く。
 
@@ -188,7 +200,17 @@ python3 scripts/pptx_edit.py lang  <出力>.pptx -o <出力>.pptx --force     # 
 | 既にある・guard_edit が止めた | 上書きしない。変わった枚を見せて決めてもらう |
 
 **枚を足す**ときは、土台のレイアウトから足す（公式の枚の複製の手順を道具として使う。`07_official.md`）。
-**強調の枠・矢印は図形で置く。画像に焼き込まない。**画像を差し替えたら出どころの表を更新する（`55_revise.md` 0-2）。
+**強調の枠・矢印・番号・画像は `pptx_edit.py shape` / `picture` で足す。画像に焼き込まない。**
+
+```bash
+python3 scripts/pptx_edit.py picture <土台>.pptx --slide 6 --file 画面.png --x 1 --y 3 --w 14 -o <出力>
+python3 scripts/pptx_edit.py shape  <出力>.pptx --slide 6 --kind frame  --x 4 --y 5 --w 3 --h 1.2 -o <出力>.pptx --force
+python3 scripts/pptx_edit.py shape  <出力>.pptx --slide 6 --kind number --x 3.4 --y 4.4 --w 0.8 --h 0.8 --text 1 -o <出力>.pptx --force
+```
+
+**PowerPoint を直接操作するのは、道具で出来ないときだけ。**その前に `guard_edit.py record` で控えを取り、
+終わったら `diff_slides.py --format` で、意図した枚以外が変わっていないかを出す（直接操作は退避を通らない）。
+画像を足した・替えたら出どころの表を更新する（`55_revise.md` 0-2）。**画面が変わったら、画像・それを指す図形・ノートを一緒に直す。**
 ノートの中身は `slider-script` の担当。**ノートに作業メモを書かない。**
 
 ### 5. 自分で見る → 差分の報告 → 検査を渡す
@@ -207,7 +229,7 @@ python3 scripts/diff_slides.py <最新版>.pptx <案件>/out/latest/deck.pptx --
 
 ## 成果物をどこに出すか
 
-決めごとは `assets/project-layout.md` が正本。見るのは常に `<案件>/out/latest/`。
+決めごとは `references/content/project-layout.md` が正本。見るのは常に `<案件>/out/latest/`。
 **案件に版の運用（名前に Rev を入れる、同じ版に上書き）があれば、そちらに従う**（`55_revise.md`「版の扱い」）。
 受け取ったものは `<案件>/in/` に置いたまま触らない。
 

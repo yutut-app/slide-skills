@@ -54,6 +54,9 @@ def layout_doc():
     リンクを辿った実体（resolve）から上がって探す。
     """
     here = Path(__file__).resolve()
+    local = here.parents[1] / "references" / "content" / "project-layout.md"   # スキルに同梱した写し
+    if local.is_file():
+        return local
     for up in here.parents:
         cand = up / "assets" / "project-layout.md"
         if cand.is_file():
@@ -65,9 +68,12 @@ def content_dir():
     """中身の規約（意図・骨子・図・日本語・数値・用語・先方の目）の実在する場所。無ければ None。
 
     **2つの craft（html / pptx）が同じ規約を読む。**写しを持つと食い違うので、
-    リポジトリ直下の `assets/content/` に1つだけ置く。探し方は `layout_doc()` と同じ。
+    正本はリポジトリ直下の `assets/content/`。**各スキルの `references/content/` に写しを同梱する**（`tools/bundle_content.py`）。同梱の写しを先に見る。
     """
     here = Path(__file__).resolve()
+    local = here.parents[1] / "references" / "content"   # スキルに同梱した写し。**フォルダだけ写した機械でも届く**
+    if (local / "40_japanese.md").is_file():
+        return local
     for up in here.parents:
         cand = up / "assets" / "content"
         if (cand / "40_japanese.md").is_file():
@@ -79,7 +85,7 @@ if __name__ == "__main__":
     import sys
     if "--content" in sys.argv:
         d = content_dir()
-        print(d if d else "**無し**（スキルのフォルダだけが置かれた環境）。中身の規約が読めない。リポジトリを clone して `sh tools/link.sh` で登録する")
+        print(d if d else "**無し**（スキルのフォルダだけが置かれた環境）。中身の規約が読めない。スキルを入れ直す（README「登録と更新」）")
         sys.exit(0 if d else 1)
     if "--layout" in sys.argv:
         d = layout_doc()

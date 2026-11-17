@@ -28,8 +28,8 @@ HTML の道:  slider-html-craft → slider-html-reskin → slider-deck
 pptx の道:  slider-pptx-craft → slider-deck
 ```
 
-中身の規約（意図・骨子・図・日本語）は2つの craft が共通で読むので、スキルのフォルダではなく
-**リポジトリ直下の `assets/content/`** に1つだけ置く。**リポジトリごと clone して使う。**
+中身の規約（意図・骨子・図・日本語）の正本はリポジトリ直下の `assets/content/`。
+**各スキルの `references/content/` に同じ物を同梱する**（`python3 tools/bundle_content.py`。publish の前に一致を検査する）。
 
 ### 機械ごとに、要るスキルは違う
 
@@ -40,20 +40,20 @@ pptx の道:  slider-pptx-craft → slider-deck
 
 ## 登録と更新
 
-実体はこのリポジトリに置き、`~/.claude/skills/` から参照する。**clone した機械では、`git pull` の後に毎回これを1回実行する。**
-スキルの名前を変えたとき、古いリンクを外して新しいリンクを張る（中身は消さない）。
+**5本とも入れる。**`skills` の中のフォルダだけを手で写すと、古いファイルが残ったり、1本だけ入れ忘れたりする
+（実績: 3本だけが入り、参照ファイル1本が別の中身のままだった）。**写すのは道具に任せ、最後に正本と比べる。**
 
-```bash
-git pull
-sh tools/link.sh            # 登録する。旧名（slider-craft・slider-reskin・create-slide）のリンクを外す
-sh tools/link.sh --check    # 何もせず、状態だけ出す
-```
+| 機械 | 入れ方（リポジトリのフォルダで実行） | 更新するとき |
+|---|---|---|
+| **Windows** | `powershell -ExecutionPolicy Bypass -File tools\install.ps1` | `git pull` の後に同じコマンド |
+| Mac / Linux（写す） | `sh tools/install.sh` | `git pull` の後に同じコマンド |
+| Mac / Linux（リンク。この機械で直す人向け） | `sh tools/link.sh` | `git pull` の後に同じコマンド |
+
+どれも最後に `tools/verify_install.py` が、入れた先を正本と1ファイルずつ比べ、**足りない・多い・中身が違う**を出す。
+中身の規約（意図・骨子・図・日本語）は**各スキルの `references/content/` に同梱**しているので、フォルダを写せば届く。
 
 **版の確かめ方：**どのスキルでも、最初の判定表の1行目に「いま動いているスキル（版、日付）」が出る。
-レビューや不具合の報告には、その行を貼る。**古い版が動いていたら、`git pull` と `sh tools/link.sh` から。**
-
-Windows はリンクの代わりにフォルダを写す（管理者の PowerShell で `New-Item -ItemType SymbolicLink` でもよい）。
-写した場合は `assets/content/` が届かないので、リポジトリごと置き、`skills\<名前>` を指すリンクを張る。
+**入れ方に不備があると、判定表が「止まる」と出して作業を始めない。**そのときは上のコマンドで入れ直す。
 
 確認は一覧を見る。**リンク切れは一覧から無言で消えるだけ**なので、
 スキルが出てこないときは最初にここを見る。

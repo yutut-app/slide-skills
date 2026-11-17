@@ -32,8 +32,25 @@ def slide_names(z: zipfile.ZipFile):
     return sorted(names, key=lambda n: int("".join(c for c in Path(n).stem if c.isdigit())))
 
 
+# 見た目に効かない差。**これで「差あり」と出さない。**
+# 実績: PowerPoint で開いて保存しただけの枚が「差あり」と出た（図形の識別子・編集の印が付き直る）
+_NOISE_ATTRS = {"dirty", "err", "smtClean", "smtId", "noProof", "lang", "altLang", "bmk"}
+_R_NS = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+
+
 def canon(blob: bytes) -> bytes:
-    return etree.tostring(etree.fromstring(blob), method="c14n2", strip_text=True)
+    root = etree.fromstring(blob)
+    for el in list(root.iter()):
+        if not isinstance(el.tag, str):
+            continue
+        if etree.QName(el).localname == "extLst":          # 図形の識別子（creationId）など
+            el.getparent().remove(el)
+            continue
+        for a in list(el.attrib):
+            q = etree.QName(a)
+            if q.localname in _NOISE_ATTRS or q.namespace == _R_NS:   # rId は保存のたびに振り直される
+                del el.attrib[a]
+    return etree.tostring(root, method="c14n2", strip_text=True)
 
 
 def texts(blob: bytes):
@@ -41,6 +58,21 @@ def texts(blob: bytes):
     root = etree.fromstring(blob)
     A = "{http://schemas.openxmlformats.org/drawingml/2006/main}"
     return [e.text for e in root.iter(f"{A}t") if e.text and e.text.strip()]
+
+
+def media(z: zipfile.ZipFile, slide_name: str):
+    """その枚が使う画像の中身（ハッシュ）。rId は無視して比べるので、**差し替えはここで拾う**。"""
+    import hashlib, posixpath
+    rel = posixpath.join(posixpath.dirname(slide_name), "_rels", posixpath.basename(slide_name) + ".rels")
+    if rel not in z.namelist():
+        return []
+    out = []
+    for r in etree.fromstring(z.read(rel)):
+        if r.get("Type", "").endswith("/image"):
+            t = posixpath.normpath(posixpath.join(posixpath.dirname(slide_name), r.get("Target")))
+            if t in z.namelist():
+                out.append(hashlib.md5(z.read(t)).hexdigest())
+    return sorted(out)
 
 
 A_NS = "{http://schemas.openxmlformats.org/drawingml/2006/main}"
@@ -107,7 +139,8 @@ def main():
             changed.append((no, "削除", ""))
             continue
         ba, bb = a.read(na[i]), b.read(nb[i])
-        if ba == bb or canon(ba) == canon(bb):
+        pic_changed = media(a, na[i]) != media(b, nb[i])
+        if (ba == bb or canon(ba) == canon(bb)) and not pic_changed:
             same.append(no)
             continue
         ta, tb = texts(ba), texts(bb)
@@ -124,7 +157,8 @@ def main():
                 detail.append(fd)
             changed.append((no, "文字が変わった", "、".join(detail)))
         else:
-            changed.append((no, "見た目が変わった", fd or "文字は同じ。位置・色・書式のいずれか"))
+            changed.append((no, "画像が変わった" if pic_changed and canon(ba) == canon(bb) else "見た目が変わった",
+                            fd or ("画像の中身が差し替わった" if pic_changed else "文字は同じ。位置・色・書式のいずれか")))
 
     if not changed:
         print("変わったスライドは無い。")

@@ -6,6 +6,13 @@
     python3 scripts/pptx_edit.py image <pptx> --slide N --pic 1 --file 新.png -o <出力>
     python3 scripts/pptx_edit.py lang  <pptx> -o <出力>                       # 日本語の run の校正言語を ja-JP に
     python3 scripts/pptx_edit.py notes <pptx> --slide N --text-file notes.txt -o <出力>
+    python3 scripts/pptx_edit.py shape <pptx> --slide N --kind frame|circle|number|arrow|text --x 2 --y 3 --w 4 --h 1 [--text 1] -o <出力>
+    python3 scripts/pptx_edit.py picture <pptx> --slide N --file 画面.png --x 1 --y 2 --w 12 -o <出力>
+    （位置と大きさは cm。arrow は --x --y から --x2 --y2 へ）
+
+**強調の枠・矢印・番号は、画像に焼き込まず、この道具で図形として置く。**
+PowerPoint を直接操作するのは、この道具で出来ないときだけ。その前に退避を取り、後で差分を出す
+（直接操作は guard_edit を通らない。実績: 図形を足す道具が無く、退避を手で取って進めた）。
 
 **同じ物を slider-pptx-craft と slider-script に置く**（`tools/sync_check.py` で一致を見る）。
 
@@ -259,10 +266,85 @@ def cmd_notes(prs, args):
     return 0
 
 
+# ---------------------------------------------------------------- shape / picture
+def _cm(v):
+    from pptx.util import Cm
+    return Cm(float(v))
+
+
+def _rgb(hexs):
+    from pptx.dml.color import RGBColor
+    return RGBColor.from_string(hexs.upper())
+
+
+def cmd_shape(prs, args):
+    from pptx.enum.shapes import MSO_CONNECTOR, MSO_SHAPE
+    from pptx.util import Pt
+    slide = prs.slides[args.slide - 1]
+    color = args.color or "C00000"
+    if args.kind == "arrow":
+        if args.x2 is None or args.y2 is None:
+            sys.exit("arrow は --x2 --y2（矢の先）が要る")
+        sh = slide.shapes.add_connector(MSO_CONNECTOR.STRAIGHT, _cm(args.x), _cm(args.y), _cm(args.x2), _cm(args.y2))
+        sh.line.color.rgb = _rgb(color)
+        sh.line.width = Pt(args.weight)
+        ln = sh.line._get_or_add_ln()
+        tail = etree.SubElement(ln, f"{A}tailEnd")
+        tail.set("type", "triangle"); tail.set("w", "lg"); tail.set("len", "lg")
+    else:
+        if args.w is None or args.h is None:
+            sys.exit(f"{args.kind} は --w --h が要る")
+        kind = {"frame": MSO_SHAPE.RECTANGLE, "circle": MSO_SHAPE.OVAL, "number": MSO_SHAPE.OVAL,
+                "text": MSO_SHAPE.RECTANGLE}[args.kind]
+        sh = slide.shapes.add_shape(kind, _cm(args.x), _cm(args.y), _cm(args.w), _cm(args.h))
+        if args.kind in ("frame", "circle"):          # 枠だけ。下の画像を隠さない
+            sh.fill.background()
+            sh.line.color.rgb = _rgb(color)
+            sh.line.width = Pt(args.weight)
+        elif args.kind == "number":                   # 塗った丸に白い番号
+            sh.fill.solid(); sh.fill.fore_color.rgb = _rgb(color)
+            sh.line.fill.background()
+        else:                                         # 文字枠：塗りも線も無し
+            sh.fill.background(); sh.line.fill.background()
+        if args.text:
+            tf = sh.text_frame
+            tf.text = args.text
+            r = tf.paragraphs[0].runs[0]
+            r.font.size = Pt(args.size)
+            r.font.bold = args.kind == "number"
+            r.font.color.rgb = _rgb("FFFFFF" if args.kind == "number" else (args.text_color or "000000"))
+            if JA.search(args.text):
+                set_lang(r._r)
+    st = sh._element.find("{http://schemas.openxmlformats.org/presentationml/2006/main}style")
+    if st is not None:                                # テーマの影・既定の色を付けない（資料の書式から浮く）
+        st.getparent().remove(st)
+    sh.name = f"追加_{args.kind}_{len(slide.shapes)}"
+    print(f"足した: {args.slide}枚目 {sh.name}（{args.kind}・色{color}）。**下の画像と位置が合っているかを絵で見る**")
+    guard_and_save(prs, Path(args.out), args.force)
+    return 0
+
+
+def cmd_picture(prs, args):
+    from PIL import Image
+    slide = prs.slides[args.slide - 1]
+    w, h = Image.open(args.file).size
+    if args.w is None and args.h is None:
+        sys.exit("--w か --h のどちらかが要る（もう片方は縦横比から決める。引き伸ばさない）")
+    if args.w is not None:
+        cw = _cm(args.w); ch = int(cw * h / w)
+    else:
+        ch = _cm(args.h); cw = int(ch * w / h)
+    pic = slide.shapes.add_picture(args.file, _cm(args.x), _cm(args.y), cw, ch)
+    pic.name = f"追加_画像_{Path(args.file).stem}"
+    print(f"足した: {args.slide}枚目 {pic.name}（縦横比は元のまま）。出どころの表（55_revise 0-2）に1行足す")
+    guard_and_save(prs, Path(args.out), args.force)
+    return 0
+
+
 def main():
     ap = argparse.ArgumentParser(description="既存の pptx を、書式を保って局所的に直す")
     sub = ap.add_subparsers(dest="cmd", required=True)
-    for name in ("formats", "text", "image", "lang", "notes"):
+    for name in ("formats", "text", "image", "lang", "notes", "shape", "picture"):
         s = sub.add_parser(name)
         s.add_argument("pptx")
         s.add_argument("--slide", type=int)
@@ -277,12 +359,26 @@ def main():
     sp["image"].add_argument("--file", required=True)
     sp["lang"].add_argument("--lang", default="ja-JP")
     sp["notes"].add_argument("--text-file", required=True)
+    for k in ("shape", "picture"):
+        for o in ("--x", "--y"):
+            sp[k].add_argument(o, type=float, required=True)
+        sp[k].add_argument("--w", type=float)
+        sp[k].add_argument("--h", type=float)
+    sp["shape"].add_argument("--kind", choices=["frame", "circle", "number", "arrow", "text"], required=True)
+    sp["shape"].add_argument("--x2", type=float)
+    sp["shape"].add_argument("--y2", type=float)
+    sp["shape"].add_argument("--text")
+    sp["shape"].add_argument("--color", help="線・塗りの色（既定 C00000）")
+    sp["shape"].add_argument("--text-color")
+    sp["shape"].add_argument("--size", type=float, default=14)
+    sp["shape"].add_argument("--weight", type=float, default=2.25, help="線の太さ pt")
+    sp["picture"].add_argument("--file", required=True)
     args = ap.parse_args()
-    if args.cmd in ("text", "image", "notes") and not args.slide:
+    if args.cmd in ("text", "image", "notes", "shape", "picture") and not args.slide:
         ap.error("--slide が要る")
     prs = Presentation(args.pptx)
     return {"formats": cmd_formats, "text": cmd_text, "image": cmd_image,
-            "lang": cmd_lang, "notes": cmd_notes}[args.cmd](prs, args)
+            "lang": cmd_lang, "notes": cmd_notes, "shape": cmd_shape, "picture": cmd_picture}[args.cmd](prs, args)
 
 
 if __name__ == "__main__":

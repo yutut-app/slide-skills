@@ -91,7 +91,7 @@ slider-deck（検査）→ 指摘は担当へ戻る（文は html-craft、変換
 ## 公式 pptx スキルとの関係
 
 **このスキルが主導し、公式は道具として使う。**どこを使い、どこをテンプレート優先で上書きするかは
-`assets/content/07_official.md`（`python3 scripts/paths.py --content` が場所を返す）。
+`references/content/07_official.md`（`python3 scripts/paths.py --content` が場所を返す）。
 
 ---
 
@@ -100,8 +100,8 @@ slider-deck（検査）→ 指摘は担当へ戻る（文は html-craft、変換
 | ファイル | 内容 | 読むタイミング |
 |---|---|---|
 | `scripts/entry_check.py` | **入口の判定**（5スキル共通）。担当・版・道具・旧スキルの有無 | **手順0で必ず（最初に）** |
-| `assets/content/00_route.md`（リポジトリ直下） | 5スキルの呼び分け | 担当が違うと出たとき |
-| `assets/project-layout.md`（リポジトリ直下。`python3 scripts/paths.py --layout`） | 成果物の置き場。`out/latest` と `out/vNN` | **成果物を出す前に必ず** |
+| `references/content/00_route.md`（各スキルに同梱） | 5スキルの呼び分け | 担当が違うと出たとき |
+| `references/content/project-layout.md`（各スキルに同梱。`python3 scripts/paths.py --layout`） | 成果物の置き場。`out/latest` と `out/vNN` | **成果物を出す前に必ず** |
 | `references/05_receive.md` | テンプレートが無い・指紋が食い違う・HTML が会話に貼られたとき | **該当するとき必ず** |
 | `references/10_rules.md` | **載せ替えの規則**。レイアウトの決まり方、できないこと | **別テンプレへ載せ替える前に必ず** |
 | `references/20_templates.md` | テンプレートの置き場所、追加、解析 | テンプレートを足す・調べるとき |
@@ -142,6 +142,8 @@ slider-deck（検査）→ 指摘は担当へ戻る（文は html-craft、変換
 ```bash
 python3 scripts/entry_check.py [<受け取ったファイル>] [--project <案件>] --want convert
 ```
+
+**終了コード3（「止まる：スキルの入れ方に不備がある」）が出たら、作業を始めない。**不備をそのまま利用者に伝え、入れ直してもらう（README「登録と更新」）。
 
 **担当が slider-html-reskin でないと出たら、そのスキルへ渡す。**
 HTML が無ければ変換できない。pptx を直接作る・直すなら `slider-pptx-craft`。
@@ -230,7 +232,7 @@ python3 scripts/fit_check.py check <案件>/out/latest/deck.pptx
 
 ## 成果物をどこに出すか
 
-決めごとは `assets/project-layout.md` が正本。**ここには繰り返さない。**
+決めごとは `references/content/project-layout.md` が正本。**ここには繰り返さない。**
 見るのは常に `<案件>/out/latest/`。名前は固定。日時を名前に入れない。
 
 ## 承認ポイント — どこで止まるか

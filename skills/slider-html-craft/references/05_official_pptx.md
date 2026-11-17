@@ -10,7 +10,7 @@
 | 層 | 中身 | 扱い |
 |---|---|---|
 | **技術** | pptxgenjs の落とし穴、テンプレートの unzip→XML差し替え、`validate.py`、`thumbnail.py`、`add_slide.py` | **公式に委譲する。**再実装しない。手順は公式 SKILL.md を読んで従う |
-| **思想** | Design Ideas 節（「退屈なスライドを作るな」、Coral Energy などの派手なパレット10種、全スライドにビジュアル要素） | **使わない。**代わりに `assets/content/40_japanese.md` と本スキルの配色規約に従う |
+| **思想** | Design Ideas 節（「退屈なスライドを作るな」、Coral Energy などの派手なパレット10種、全スライドにビジュアル要素） | **使わない。**代わりに `references/content/40_japanese.md` と本スキルの配色規約に従う |
 
 **公式の Design Ideas 節に従うと、報告・提案資料には強すぎる配色と装飾になる。**
 **フォント・文字サイズ・配色は、資料テンプレートが決める。本スキルで固定しない。**

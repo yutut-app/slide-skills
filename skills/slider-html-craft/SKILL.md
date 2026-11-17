@@ -14,7 +14,7 @@ metadata:
 
 **そのために、作る側だけでなく、受け取る側の目でも読む。**
 作り手は自分の資料を読めない。書いていないことを頭で補ってしまうため。
-手順2と手順5で `assets/content/80_audience.md` に従い、**先方になりきって疑問を出す。**
+手順2と手順5で `references/content/80_audience.md` に従い、**先方になりきって疑問を出す。**
 常に「今どの段階にいて、次に何を確定するか」を示す。
 
 ### 役割 — 誰として、何を優先するか
@@ -31,7 +31,7 @@ metadata:
 **「誰の側に立つか」が、指摘を弱めるかどうかを決める。**
 利用者は作り手なので、厳しい指摘は歓迎されないことがある。
 **それでも弱めない。** 弱めた指摘は本番で先方から出て、そのときは直せない。
-**褒めない。** 穴を見つけるのが目的（`assets/content/80_audience.md`）。
+**褒めない。** 穴を見つけるのが目的（`references/content/80_audience.md`）。
 
 ---
 
@@ -84,24 +84,24 @@ metadata:
 | ファイル | 内容 | 読むタイミング |
 |---|---|---|
 | `scripts/entry_check.py` | **入口の判定**（5スキル共通）。担当・版・道具・旧スキル | **手順0で必ず（最初に）** |
-| `assets/content/00_route.md`（リポジトリ直下） | 5スキルの呼び分け | 担当が違うと出たとき |
+| `references/content/00_route.md`（各スキルに同梱） | 5スキルの呼び分け | 担当が違うと出たとき |
 | `docs/handoff-to-project.md`（**手元のリポジトリのみ。配布物には入らない**） | **案件を進める側への決めごと**。残件、必ず通す検査、踏んだ落とし穴 | **案件の作業を始めるとき、引き継ぐとき** |
-| `assets/project-layout.md`（**5スキル共通の正本。スキルのフォルダではなくリポジトリ直下**。パスは `python3 scripts/paths.py --layout` が返す） | **成果物の置き場。**`out/latest` と `out/vNN`、道具の既定、版を切る手順 | **案件を始めるとき、成果物を出す前に必ず** |
-| `assets/content/10_intent.md` | 背景・目的・相手・フェーズの確定。**やらないことの線引き** | **手順1の前に必ず** |
-| `assets/content/20_story.md` | ストーリーラインの型3種と、骨子の作り方 | 手順2（骨子を組むとき） |
-| `assets/content/30_visual.md` | **図解の型の選定**。内容の性質からテンプレートを決める | 手順3（1枚ずつ埋めるとき） |
-| `assets/content/31_chart.md` | **グラフと図の既定**。並べた図の軸の共有、棒の幅と位置、消える値、ラベル、判定表 | **型を選んだ後、描く前に必ず** |
-| `assets/content/40_japanese.md` | **文体規約とAI感の除去**。禁止語・文字量・改行 | **手順3と手順5で必ず** |
-| `assets/content/45_layout.md` | **レイアウトの検算**。縦グリッド、入る文字数、入らないときの4択 | **手順3で文言を書く前に必ず** |
+| `references/content/project-layout.md`（**5スキル共通。各スキルに同梱**。パスは `python3 scripts/paths.py --layout` が返す） | **成果物の置き場。**`out/latest` と `out/vNN`、道具の既定、版を切る手順 | **案件を始めるとき、成果物を出す前に必ず** |
+| `references/content/10_intent.md` | 背景・目的・相手・フェーズの確定。**やらないことの線引き** | **手順1の前に必ず** |
+| `references/content/20_story.md` | ストーリーラインの型3種と、骨子の作り方 | 手順2（骨子を組むとき） |
+| `references/content/30_visual.md` | **図解の型の選定**。内容の性質からテンプレートを決める | 手順3（1枚ずつ埋めるとき） |
+| `references/content/31_chart.md` | **グラフと図の既定**。並べた図の軸の共有、棒の幅と位置、消える値、ラベル、判定表 | **型を選んだ後、描く前に必ず** |
+| `references/content/40_japanese.md` | **文体規約とAI感の除去**。禁止語・文字量・改行 | **手順3と手順5で必ず** |
+| `references/content/45_layout.md` | **レイアウトの検算**。縦グリッド、入る文字数、入らないときの4択 | **手順3で文言を書く前に必ず** |
 | `scripts/visual_check.py` | **図版と余白の検査**（上下端・最小文字・文字の重なり・枠に入らない値・判定表の未確認） | **絵を人に見せる前に必ず** |
 | `scripts/ledger_check.py` | **台帳で照合する**（古い語・以前の値が0件か／MLの型／修正の経緯の印） | **手順5の関所と、直した後に必ず** |
 | `references/05_official_pptx.md` | **公式 pptx スキルとの線引き**（技術は委譲、思想は使わない） | **最初に1度必ず** |
 | `references/50_build.md` | 生成経路（テンプレートの形式ごと）、図の元ファイルの別添、出力先の決まり | テンプレートの形式が分かったとき |
-| `assets/content/47_terms.md` | **用語台帳。**同じものを指す語を1つに決める | **手順2で作る** |
-| `assets/content/46_numbers.md` | **数値の検算と連鎖**。1つ変えると何枚に波及するか。台帳の作り方 | **数値を載せるとき／変えるとき必ず** |
+| `references/content/47_terms.md` | **用語台帳。**同じものを指す語を1つに決める | **手順2で作る** |
+| `references/content/46_numbers.md` | **数値の検算と連鎖**。1つ変えると何枚に波及するか。台帳の作り方 | **数値を載せるとき／変えるとき必ず** |
 | `references/48_html.md` | **HTML を編集対象にする往復**。2つの入り口、効かないこと | **HTML から始める／HTML を受け取ったとき必ず** |
 | `references/49_handoff.md` | **2人以上で1つの資料を回す**。正本の所在、渡すもの、引き継ぎメモの型 | **担当が分かれるとき必ず** |
-| `assets/content/80_audience.md` | **先方の目で読む**。役の作り方、立場別の観点、疑問の処理 | **手順2と手順5で必ず** |
+| `references/content/80_audience.md` | **先方の目で読む**。役の作り方、立場別の観点、疑問の処理 | **手順2と手順5で必ず** |
 | `assets/templates/INDEX.md` | テンプレート25件の索引と選び方 | 図を選ぶとき |
 | `scripts/read_template_style.py` | **資料テンプレートのフォント・文字サイズ・配色を読み出す** | **テンプレートがあるとき、手順0で必ず** |
 | `scripts/make_html.py` | テンプレートから編集用 HTML を起こす | HTML で作るとき |
@@ -115,7 +115,7 @@ metadata:
 | `scripts/extract_assets.py` | **実物の .pptx から画像を取り出す**（ロゴ）。使われ場所つきで出す | テンプレートを実物に合わせるとき |
 
 **pptx に変換する道具は `slider-html-reskin`、pptx を検査する道具は `slider-deck` にある。ここに作り直さない。**
-`assets/content/` はスキルのフォルダではなく**リポジトリ直下**にある（2つの craft が共通で読む）。場所は `python3 scripts/paths.py --content` が返す。
+`references/content/` は5スキルに同じ物を同梱している（正本はリポジトリ直下。写しを直接直さない）。場所は `python3 scripts/paths.py --content` が返す。
 
 必要なファイルだけを読む。全部読まない。
 
@@ -145,6 +145,8 @@ metadata:
 ```bash
 python3 scripts/entry_check.py [<受け取ったファイル>] [--project <案件>] --want html
 ```
+
+**終了コード3（「止まる：スキルの入れ方に不備がある」）が出たら、作業を始めない。**不備をそのまま利用者に伝え、入れ直してもらう（README「登録と更新」）。
 
 **前回の会議の資料から次回分を作るとき**は、前回の**最新版**（人の手直しの後）を元にする。
 前回が pptx しか無いなら、pptx のまま直すか（`slider-pptx-craft`）、HTML に起こすかを判定表で聞く。
@@ -198,7 +200,7 @@ ls -d assets/templates/deck/*/
 
 ### 1. 意図の確定 ★ここで止まる
 
-`assets/content/10_intent.md` を読む。**4点が埋まるまで骨子を書き始めない。**
+`references/content/10_intent.md` を読む。**4点が埋まるまで骨子を書き始めない。**
 
 | 問い | 確定させること |
 |---|---|
@@ -213,15 +215,15 @@ ls -d assets/templates/deck/*/
 
 ### 2. 骨子の設計 ★ここで止まる
 
-`assets/content/20_story.md` を読む。**スライドは1枚も作らない。**
+`references/content/20_story.md` を読む。**スライドは1枚も作らない。**
 出すのは、スライド番号・見出し・**役割**・メッセージライン・図解の型 の一覧表だけ。
 **メッセージラインは、その枚の役割に答える形で書く。**役割に答えていない ML は、
 その枚が要らないか、役割の書き方が曖昧かのどちらか。
 
-**同時に用語台帳を作る**（`assets/content/47_terms.md`）。同じものを指す語を1つに決め、
+**同時に用語台帳を作る**（`references/content/47_terms.md`）。同じものを指す語を1つに決め、
 数値台帳（`46_numbers.md`）と並べて持つ。**初めての領域ほど語が揺れる。最初に作る。**
 
-そのうえで `assets/content/80_audience.md` を読み、**先方になりきってメッセージラインを
+そのうえで `references/content/80_audience.md` を読み、**先方になりきってメッセージラインを
 通し読みする。** 手順1で確定した相手の立場・姿勢・決裁権から役を作る。
 **ここで構成の穴を潰すのが最も安い。**作り込んでから出ると作り直しになる。
 
@@ -230,7 +232,7 @@ ls -d assets/templates/deck/*/
 
 ### 3. 1枚ずつ中身を決める
 
-`assets/content/30_visual.md` と `assets/content/40_japanese.md` を読む。
+`references/content/30_visual.md` と `references/content/40_japanese.md` を読む。
 
 1枚につき次を決める。**箇条書きを既定にしない。**
 
@@ -242,7 +244,7 @@ ls -d assets/templates/deck/*/
 **図解の型が選べないスライドは、そのスライド自体が不要な可能性が高い。**
 消せないか先に検討する。
 
-**文言を書く前に `assets/content/45_layout.md` を読み、入る量を先に決める。**
+**文言を書く前に `references/content/45_layout.md` を読み、入る量を先に決める。**
 書いてから縮めるのではなく、上限を見てから文言を決める。往復の大半はここで消える。
 
 ```bash
@@ -280,7 +282,7 @@ python3 scripts/make_html.py --template <テンプレ>.pptx --outline outline.md
 
 **A で座標や文字サイズを動かさない。**テンプレートの実測値であり、
 動かすと元の資料と並べたときに合わなくなる。入らないなら
-[文言を減らすか、スライドを分ける](assets/content/45_layout.md)。
+[文言を減らすか、スライドを分ける](references/content/45_layout.md)。
 
 ### 5. 検査 ★止まらないが、必ず行う
 
@@ -324,7 +326,7 @@ python3 scripts/html_png.py <案件>/work/*.html
 **出力の末尾だけを読まない。**不合格の一覧は途中にある。
 実際にそれで「ゼロ」と誤報告した。
 
-**続けて `assets/content/80_audience.md` に従い、先方の目で全スライドを読む。**
+**続けて `references/content/80_audience.md` に従い、先方の目で全スライドを読む。**
 見た目と文章が通っていても、**先方が判断できない資料は不合格。**
 
 #### 検査の関所 ★必須。下の欄を全部埋めるまで「できました」と言わない

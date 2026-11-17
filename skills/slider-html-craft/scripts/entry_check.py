@@ -47,17 +47,61 @@ WANT = {"html": "slider-html-craft", "convert": "slider-html-reskin", "pptx": "s
         "check": "slider-deck", "script": "slider-script"}
 
 # 担当ごとに最初に読むもの。**表に出たものを読んでから手を動かす。**
-REFS = {
-    "slider-html-craft": ["assets/content/00_route.md", "assets/content/10_intent.md",
-                          "assets/content/20_story.md", "skills/slider-html-craft/references/48_html.md"],
-    "slider-html-reskin": ["skills/slider-html-reskin/references/05_receive.md",
-                           "skills/slider-html-reskin/references/30_from_pptx.md",
-                           "assets/content/07_official.md"],
-    "slider-pptx-craft": ["skills/slider-pptx-craft/references/55_revise.md",
-                          "assets/content/07_official.md", "assets/content/40_japanese.md"],
-    "slider-deck": ["skills/slider-deck/references/60_qa.md"],
-    "slider-script": ["skills/slider-script/references/10_script.md"],
+REFS = {   # 担当のスキルのフォルダから見たパス
+    "slider-html-craft": ["references/content/00_route.md", "references/content/10_intent.md",
+                          "references/content/20_story.md", "references/48_html.md"],
+    "slider-html-reskin": ["references/05_receive.md", "references/30_from_pptx.md",
+                           "references/content/07_official.md"],
+    "slider-pptx-craft": ["references/55_revise.md", "references/content/07_official.md",
+                          "references/content/10_intent.md", "references/content/20_story.md",
+                          "references/content/40_japanese.md"],
+    "slider-deck": ["references/60_qa.md", "references/content/80_audience.md"],
+    "slider-script": ["references/10_script.md", "references/content/10_intent.md"],
 }
+
+_MEETING = re.compile(r"(?i)(第\s*\d+\s*回|mtg\s*\d+|meeting|会議)")
+
+
+def skill_dir(name):
+    """隣のスキルのフォルダ。**同じ親の下 → 登録先**の順に探す（フォルダだけ写した機械でも引ける）。"""
+    for d in (HERE.parents[2] / name, SKILLS_HOME / name):
+        if (d / "SKILL.md").is_file():
+            return d
+    return None
+
+
+def ref_problem(path: Path):
+    """参照ファイルが無い・中身が別のファイル、なら理由。見出し（1行目）が `# <名前>` で始まるかで見る。
+    実績: 写したときに取り違え、`55_revise.md` の中身が別のファイルだった。"""
+    if not path.is_file():
+        return "無い"
+    if path.name == "project-layout.md":
+        return None
+    try:
+        head = path.read_text(encoding="utf-8", errors="ignore").splitlines()[0]
+    except (OSError, IndexError):
+        return "読めない"
+    return None if head.startswith(f"# {path.stem}") else f"中身が別のファイル（1行目: {head[:30]}）"
+
+
+def lock_files(dirs):
+    """Office のロックファイル（~$）と、元のファイルに書き込めるか。**ロックファイルは目安。**
+    実績: 古いロックファイルが残っていて、開いているかを判断できなかった。"""
+    rows = []
+    for d in dirs:
+        for lk in sorted(d.glob("~$*")):
+            stem = lk.name[2:]
+            real = next((p for p in d.iterdir() if p.name.endswith(stem) and not p.name.startswith("~$")), None)
+            if real is None:
+                rows.append((lk.name, "元のファイルが無い（古い残り）"))
+                continue
+            try:
+                with open(real, "r+b"):
+                    pass
+                rows.append((lk.name, f"{real.name} に書き込める（**開いていない可能性が高い**。開いていないか利用者に確かめる）"))
+            except OSError:
+                rows.append((lk.name, f"**{real.name} に書き込めない（開いている）**。閉じてもらう"))
+    return rows
 
 
 def is_slide_html(p: Path) -> bool:
@@ -154,11 +198,11 @@ def repo_date() -> str:
 def registered():
     rows = []
     for n in SKILLS:
-        link = SKILLS_HOME / n
-        if (link / "SKILL.md").exists():
-            rows.append((n, f"登録済み（版 {skill_version(link.resolve())}）"))
+        d = skill_dir(n)
+        if d:
+            rows.append((n, f"有り（版 {skill_version(d.resolve())}）"))
         else:
-            rows.append((n, "**未登録**（`sh tools/link.sh` で登録する）"))
+            rows.append((n, "**無い**（README「登録と更新」で5本とも入れる）"))
     legacy = [(n, LEGACY[n]) for n in LEGACY if (SKILLS_HOME / n).exists() or (SKILLS_HOME / n).is_symlink()]
     return rows, legacy
 
@@ -203,6 +247,22 @@ def main():
     reg, legacy = registered()
     owner, why = decide(args.want, html, pptx)
 
+    # **入れ方の不備は、ここで止める。**無しを表の1行で出すだけでは、作業がそのまま進んだ（実績）
+    stops = []
+    if not (HERE.parents[1] / "references" / "content" / "40_japanese.md").is_file():
+        stops.append(f"このスキル（{SELF}）に中身の規約（references/content/）が入っていない")
+    if owner:
+        od = skill_dir(owner)
+        if od is None:
+            stops.append(f"担当のスキル {owner} が入っていない")
+        else:
+            for r in REFS.get(owner, []):
+                why_bad = ref_problem(od / r)
+                if why_bad:
+                    stops.append(f"{owner}/{r} が{why_bad}")
+    locks = lock_files([root / "in", root / "out" / "latest", root])
+    meet = sorted({p.name for p in root.iterdir() if p.is_dir() and _MEETING.search(p.name)}) if root.is_dir() else []
+
     print("## 入口の判定\n")
     print("| 確かめたこと | 結果 |")
     print("|---|---|")
@@ -225,6 +285,18 @@ def main():
     print(f"| 置き場所の決めごと | {lay if lay else '**無し**（要点: 受け取りは in/、出力は out/latest/、名前は固定）'} |")
     print(f"| 中身の規約（assets/content） | {con if con else '**無し**。リポジトリを clone して登録する'} |")
     print(f"| 版の名前（Rev 等）の形跡 | {', '.join(revs[:5]) if revs else '無し'} |")
+    print(f"| 会議ごとのフォルダ | {', '.join(meet[:5]) if meet else '見つからない'} |")
+    for name, st in locks:
+        print(f"| 開いているファイル（{name}） | {st} |")
+
+    if stops:
+        print("\n## **止まる：スキルの入れ方に不備がある**\n")
+        for x in stops:
+            print(f"- {x}")
+        print("\n**このまま作業を始めない。**利用者に上の不備を伝え、スキルを入れ直してもらう"
+              "（README「登録と更新」：`skills` の中のフォルダを5本とも写し直す）。")
+        checked.summary("entry_check", len(html) + len(pptx), "入力", len(stops), {"止まる": f"{len(stops)} 件"})
+        return 3
 
     print(f"\n**担当：{owner or '未決（下で聞く）'}**（{why}）\n")
     if owner and owner != SELF:
@@ -237,7 +309,7 @@ def main():
     if refs:
         print("\n**最初に読む参照ファイル**（読んでから手を動かす）\n")
         for r in refs:
-            print(f"- `{r}`" + ("" if (REPO / r).exists() else "（**無い**）"))
+            print(f"- `{owner}/{r}`")
 
     print("\n**まとめて確認すること**（ここで1回だけ止まる。担当のスキルの次の止まる所と、材料がそろえば1回にまとめてよい）\n")
     n = 1
@@ -248,6 +320,8 @@ def main():
         print(f"{n}. **版の扱い**：別に出すか、同じ版に上書きするか" + ("（Rev の形跡あり。案件の運用に従う）" if revs else "")); n += 1
     if not can_render:
         print(f"{n}. 画像化の道具が無い。**何で代わりに見るか**。代わりが無ければ、見た目は**検査していない**と明記する"); n += 1
+    if meet:
+        print(f"{n}. **会議で使うもの（pptx・カンペ・画像）の置き場**：会議ごとのフォルダ（{meet[0]} など）に最初から置くか"); n += 1
     if legacy:
         print(f"{n}. 旧スキルの登録が残っている。外してよいか（`sh tools/link.sh`。中身は消えない）"); n += 1
 
